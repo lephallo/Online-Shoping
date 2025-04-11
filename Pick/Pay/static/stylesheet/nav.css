@@ -1,0 +1,132 @@
+/* General Navbar Styling */
+.navbar {
+    background-color: #f8f9fa; /* Light background for the navbar */
+    padding: 10px 20px;
+    position: fixed; /* Fix the navbar to the top */
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000; /* Ensure navbar stays above other content */
+    width: 100%; /* Full-width navbar */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Optional: subtle shadow for navbar */
+}
+
+/* Add padding to body content to prevent overlap with fixed navbar */
+body {
+    padding-top: 80px; /* Adjust this value based on the navbar height */
+}
+
+/* Navbar Brand (Logo) */
+.navbar-brand {
+    font-size: 1.5rem;
+    color: #00B140 !important;
+    font-weight: bold;
+}
+
+/* Navbar Links */
+.navbar-nav .nav-item .nav-link {
+    color: #333;
+    padding: 10px 15px;
+    font-size: 1rem;
+}
+
+.navbar-nav .nav-item .nav-link:hover {
+    color: #00B140; /* Highlight color for navbar links */
+    text-decoration: none;
+}
+
+/* Active Nav Link */
+.navbar-nav .nav-item.active .nav-link {
+    color: #00B140 !important;
+}
+
+/* Responsive Navbar */
+.navbar-toggler {
+    border-color: #00B140;
+}
+
+.navbar-toggler-icon {
+    background-color: #00B140;
+}
+
+/* General User Navbar */
+.navbar-nav .nav-item .nav-link {
+    color: #333;
+}
+
+/* Customer Navbar Customizations */
+.customer-nav .nav-item .nav-link {
+    color: #007bff;
+}
+
+.customer-nav .nav-item .nav-link:hover {
+    color: #00B140;
+}
+
+/* Admin Navbar Customizations */
+.admin-nav .nav-item .nav-link {
+    color: #dc3545;
+}
+
+.admin-nav .nav-item .nav-link:hover {
+    color: #00B140;
+}
+
+/* Add Margin to the Right for the Last Nav Link (Logout) */
+.navbar-nav .nav-item:last-child .nav-link {
+    margin-right: 0;
+}
+
+/* Cart Item Count */
+.navbar-nav .nav-item .nav-link {
+    position: relative;
+}
+
+.navbar-nav .nav-item .nav-link::after {
+    content: attr(data-cart-items);
+    position: absolute;
+    top: 0;
+    right: 0;
+    background-color: red;
+    color: white;
+    border-radius: 50%;
+    padding: 0.2rem 0.5rem;
+    font-size: 0.8rem;
+    font-weight: bold;
+}
+
+/* Adjust Cart Item Count for Specific Use */
+.navbar-nav .nav-item .nav-link[data-cart-items] {
+    padding-right: 30px; /* Ensure there's space for the cart count */
+}
+
+/* Styling for Navbar Dropdown (if needed) */
+.navbar-nav .nav-item .dropdown-menu {
+    background-color: #f8f9fa;
+    border: 1px solid #ddd;
+    padding: 10px;
+}
+
+/* Admin Specific Styles */
+.admin-nav .nav-item {
+    font-weight: bold;
+}
+
+.admin-nav .nav-item .nav-link {
+    font-size: 1.1rem;
+}
+
+/* Mobile View Adjustment */
+@media (max-width: 768px) {
+    .navbar-nav {
+        text-align: center;
+    }
+
+    .navbar-nav .nav-item {
+        margin-bottom: 10px;
+    }
+
+    .navbar-nav .nav-link {
+        font-size: 1.1rem;
+    }
+}

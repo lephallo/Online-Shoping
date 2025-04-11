@@ -1,0 +1,46 @@
+
+{% load static %}
+
+
+<link rel="stylesheet" href="{% static 'stylesheet/nav.css' %}">
+
+<!-- Admin Navigation Bar -->
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <a class="navbar-brand" style="margin-right: 250px;">
+        <img src="{% static 'images/logo.png' %}" alt="Pick n Pay Lesotho Logo" width="150"> <!-- Brand Image -->
+    </a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav"
+        aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ml-auto">
+
+            <!-- Admin-specific Links -->
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'admin_dashboard' %}">Dashboard</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'product_management' %}">Manage Products</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#">Manage Customers</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#">Sales Reports</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#">Payment Transactions</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#">Order Management</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#">Site Settings</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#">Logout</a>
+            </li>
+        </ul>
+    </div>
+</nav>

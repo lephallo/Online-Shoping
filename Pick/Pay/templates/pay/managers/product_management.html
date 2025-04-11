@@ -1,0 +1,162 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Manage Products | Admin - Pick n Pay Lesotho</title>
+  <link rel="stylesheet" href="{% static 'stylesheet/base.css' %}">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+</head>
+<body>
+
+    {% include "pay/navigation/admin_nav.html" %}
+
+<!-- Content -->
+<div class="container mt-5 pt-5">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="fw-bold text-primary"><i class="bi bi-box-seam"></i> Manage Products</h2>
+    <a href="#" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addProductModal">
+        <i class="bi bi-plus-circle"></i> Add New Product
+      </a>
+      
+  </div>
+
+  <!-- Filters & Search -->
+  <div class="row mb-4 g-2">
+    <div class="col-md-4">
+      <input type="text" class="form-control" placeholder="Search by product name...">
+    </div>
+    <div class="col-md-3">
+      <select class="form-select">
+        <option selected>Filter by Category</option>
+        <option value="1">Groceries</option>
+        <option value="2">Electronics</option>
+        <option value="3">Clothing</option>
+      </select>
+    </div>
+    <div class="col-md-3">
+      <select class="form-select">
+        <option selected>Stock Status</option>
+        <option value="1">In Stock</option>
+        <option value="2">Low Stock</option>
+        <option value="3">Out of Stock</option>
+      </select>
+    </div>
+    <div class="col-md-2">
+      <a href="#" class="btn btn-outline-secondary w-100"><i class="bi bi-download"></i> Export</a>
+    </div>
+  </div>
+
+<!-- Products Table -->
+<div class="table-responsive">
+    <table class="table table-bordered align-middle table-hover shadow-sm">
+      <thead class="table-light text-center">
+        <tr>
+          <th>#</th>
+          <th>Image</th>
+          <th>Product Name</th>
+          <th>Category</th>
+          <th>Price (M)</th>
+          <th>Stock</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody class="text-center">
+        <!-- Dynamically render products -->
+        {% for product in products %}
+        <tr>
+          <td>{{ forloop.counter }}</td>
+          <td>
+            {% if product.image %}
+            <img src="{{ product.image.url }}" alt="{{ product.name }}" width="50" class="rounded shadow-sm">
+            {% else %}
+            <img src="{% static 'images/default-product.jpg' %}" alt="Default Product" width="50" class="rounded shadow-sm">
+            {% endif %}
+          </td>
+          <td>{{ product.name }}</td>
+          <td>{{ product.get_category_display }}</td> <!-- Get the category display value -->
+          <td>{{ product.price }}</td>
+          <td>{{ product.stock }}</td>
+          <td>
+            {% if product.stock > 0 %}
+            <span class="badge bg-success">In Stock</span>
+            {% else %}
+            <span class="badge bg-danger">Out of Stock</span>
+            {% endif %}
+          </td>
+          <td>
+            <a href="#" class="btn btn-sm btn-outline-info" title="View"><i class="bi bi-eye"></i></a>
+            <a href="#" class="btn btn-sm btn-outline-primary" title="Edit"><i class="bi bi-pencil-square"></i></a>
+            <a href="#" class="btn btn-sm btn-outline-danger" title="Delete"><i class="bi bi-trash"></i></a>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="8" class="text-center">No products available</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  
+</div>
+
+
+
+<!-- Add Product Modal -->
+<div class="modal fade" id="addProductModal" tabindex="-1" aria-labelledby="addProductModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content shadow">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title" id="addProductModalLabel"><i class="bi bi-plus-circle"></i> Add New Product</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+  
+            <!-- Use Django Form -->
+            <form method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Product Name</label>
+                            {{ form.name }} <!-- Rendering the 'name' field -->
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Category</label>
+                            {{ form.category }} <!-- Rendering the 'category' field -->
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Price (M)</label>
+                            {{ form.price }} <!-- Rendering the 'price' field -->
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Stock</label>
+                            {{ form.stock }} <!-- Rendering the 'stock' field -->
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label">Description</label>
+                            {{ form.description }} <!-- Rendering the 'description' field -->
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label">Product Image</label>
+                            {{ form.image }} <!-- Rendering the 'image' field -->
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-success"><i class="bi bi-save"></i> Save Product</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+  
+  
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

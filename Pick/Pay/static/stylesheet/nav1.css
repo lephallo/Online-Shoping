@@ -1,0 +1,81 @@
+/* General Navbar Styling */
+.navbar {
+    background-color: #f8f9fa; /* Light background for the navbar */
+    padding: 10px 20px;
+    position: fixed; /* Fix the navbar to the top */
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000; /* Ensure navbar stays above other content */
+    width: 100%; /* Full-width navbar */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Optional: subtle shadow for navbar */
+}
+
+/* Add padding to body content to prevent overlap with fixed navbar */
+body {
+    padding-top: 80px; /* Adjust this value based on the navbar height */
+}
+
+/* Navbar Brand (Logo) */
+.navbar-brand {
+    font-size: 1.5rem;
+    color: #00B140 !important;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+}
+
+/* Brand Logo Image Styling */
+.navbar-brand img {
+    max-width: 100%;
+    height: auto;
+    margin-right: 15px; /* Space between logo and text */
+}
+
+/* Navbar Links */
+.navbar-nav .nav-item .nav-link {
+    color: #333;
+    padding: 10px 15px;
+    font-size: 1rem;
+    transition: color 0.3s ease, transform 0.3s ease; /* Add smooth animation for color and scale */
+}
+
+.navbar-nav .nav-item .nav-link:hover {
+    color: #00B140; /* Highlight color for navbar links */
+    text-decoration: none;
+    transform: scale(1.05); /* Slight zoom effect */
+}
+
+/* Active Nav Link */
+.navbar-nav .nav-item.active .nav-link {
+    color: #3949AB !important;
+}
+
+/* Responsive Navbar */
+.navbar-toggler {
+    border-color: #3949AB;
+}
+
+.navbar-toggler-icon {
+    background-color: #3949AB;
+}
+
+/* General User Navbar */
+.navbar-nav .nav-item .nav-link {
+    color: #333;
+}
+
+/* Mobile View Adjustment */
+@media (max-width: 768px) {
+    .navbar-nav {
+        text-align: center;
+    }
+
+    .navbar-nav .nav-item {
+        margin-bottom: 10px;
+    }
+
+    .navbar-nav .nav-link {
+        font-size: 1.1rem;
+    }
+}

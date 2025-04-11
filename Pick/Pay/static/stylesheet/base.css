@@ -1,0 +1,79 @@
+    
+    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&display=swap');
+
+
+    body {
+        font-family: 'Outfit', sans-serif;
+    }
+    
+    /* Hero Section */
+    .hero-section {
+        background:  no-repeat center center;
+        background-size: cover;
+        color: #fff;
+        padding: 100px 0;
+        height: 60vh;
+    }
+
+    .hero-section h1 {
+        font-size: 3rem;
+        font-weight: bold;
+    }
+
+    .hero-section p {
+        font-size: 1.25rem;
+        margin-bottom: 30px;
+    }
+
+    /* Category Section */
+    .card img {
+        width: 100%;
+        height: auto;
+    }
+
+    .card-body h5 {
+        font-size: 1.25rem;
+        font-weight: bold;
+    }
+
+    .card-body {
+        background-color: #00B140;
+        color: white;
+    }
+
+    .card-body {
+        background-color: #CFD8DC;
+    }
+
+    .card-text {
+        color: #546E7A;
+        font-weight: bold;
+    }
+
+    .card-title {
+        color: #546E7A;
+        font-weight: bold;
+    }
+
+    .card {
+        border-bottom: red;
+        border-width: 10px;
+        border-top-left-radius: 100px;
+        border-bottom-right-radius: 100px;
+    }
+
+    /* Footer */
+    footer {
+        background-color: #333;
+    }
+
+    footer a {
+        color: #fff;
+    }
+
+    footer a:hover {
+        color: #00B140;
+    }
+
+
+        
