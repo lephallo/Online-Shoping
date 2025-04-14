@@ -1,8 +1,9 @@
 body {
-    font-family: 'Segoe UI', sans-serif;
+    font-family: 'Outfit', sans-serif;
     margin: 0;
     background-color: #fff;
-    color: #333;
+    color: #2c2c2c;
+    scroll-behavior: smooth;
 }
 
 /* Hero Section */
@@ -26,106 +27,132 @@ body {
 
 .hero-content {
     z-index: 1;
+    animation: fadeInUp 1.5s ease-out;
 }
 
 .hero-content h1 {
-    font-size: 3rem;
-    margin-bottom: 10px;
-    animation: fadeInDown 1s ease-in;
+    font-size: 3.5rem;
+    font-weight: 700;
 }
 
 .hero-content p {
-    font-size: 1.2rem;
-    animation: fadeInUp 1s ease-in;
+    font-size: 1.5rem;
+    font-weight: 300;
 }
 
 /* Story Section */
 .story-section {
     display: flex;
     flex-wrap: wrap;
-    padding: 60px 10%;
+    padding: 80px 10%;
     align-items: center;
-    background-color: #f9f9f9;
+    gap: 40px;
+    background-color: #f9fafb;
 }
 
 .story-image img {
     max-width: 100%;
-    border-radius: 12px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
 }
 
 .story-text {
     flex: 1;
-    padding: 0 40px;
+    padding: 0 20px;
 }
 
 .story-text h2 {
     color: #00B140;
-    margin-bottom: 15px;
+    font-weight: 700;
+    font-size: 2rem;
+    margin-bottom: 20px;
 }
 
-/* Mission, Vision, Values Section */
+.story-text p {
+    font-size: 1.1rem;
+    line-height: 1.6;
+}
+
+/* Mission Section */
 .mission-section {
     text-align: center;
-    padding: 60px 10%;
-    background: #fff;
+    padding: 80px 10%;
+    background: #ffffff;
 }
 
-.mission-section .cards {
+.mission-section h2 {
+    font-size: 2.5rem;
+    font-weight: 700;
+}
+
+.cards {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
     gap: 30px;
-    margin-top: 30px;
+    margin-top: 50px;
 }
 
 .card {
-    flex: 1;
-    max-width: 280px;
-    background: #f0fdf4;
-    padding: 30px;
-    border-radius: 12px;
-    transition: transform 0.3s ease;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    max-width: 300px;
+    background: #ecfdf5;
+    padding: 40px 30px;
+    border-radius: 16px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.07);
+    transition: all 0.3s ease;
 }
 
 .card:hover {
-    transform: translateY(-8px);
+    transform: translateY(-10px);
+    background-color: #d1fae5;
 }
 
-.card img {
-    width: 50px;
-    margin-bottom: 15px;
+.card i {
+    font-size: 2.5rem;
+    color: #00B140;
+    margin-bottom: 20px;
 }
 
 /* Features Section */
 .features-section {
-    padding: 60px 10%;
-    background: #fff;
+    padding: 80px 10%;
+    background: #f9f9f9;
     text-align: center;
+}
+
+.features-section h2 {
+    font-size: 2.5rem;
+    font-weight: 700;
 }
 
 .features {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
     gap: 30px;
-    margin-top: 40px;
+    margin-top: 50px;
 }
 
 .feature {
-    padding: 20px;
-    border-radius: 10px;
-    background-color: #f8f8f8;
+    padding: 30px;
+    border-radius: 16px;
+    background-color: #ffffff;
     transition: all 0.3s ease;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.05);
 }
 
 .feature:hover {
     background-color: #e6ffe6;
-    transform: scale(1.03);
+    transform: translateY(-8px);
 }
 
-.feature img {
-    width: 40px;
+.feature i {
+    font-size: 2.5rem;
+    color: #00B140;
+    margin-bottom: 15px;
+}
+
+.feature h4 {
+    font-weight: 600;
     margin-bottom: 10px;
 }
 
@@ -134,36 +161,38 @@ body {
     background-color: #00B140;
     color: white;
     text-align: center;
-    padding: 50px 20px;
+    padding: 60px 20px;
+}
+
+.cta-section h2 {
+    font-size: 2.5rem;
+    font-weight: 700;
+}
+
+.cta-section p {
+    font-size: 1.25rem;
+    margin-top: 15px;
+    font-weight: 300;
 }
 
 .cta-button {
-    margin-top: 20px;
-    padding: 12px 30px;
+    margin-top: 30px;
+    padding: 14px 40px;
     background: white;
     color: #00B140;
-    border-radius: 30px;
+    border-radius: 40px;
     text-decoration: none;
-    font-weight: bold;
-    transition: background 0.3s;
+    font-weight: 600;
+    font-size: 1rem;
+    transition: background 0.3s ease, color 0.3s ease;
 }
 
 .cta-button:hover {
     background: #d1ffe0;
-    color: #007d2c;
+    color: #006b29;
 }
 
 /* Animations */
-@keyframes fadeInDown {
-    from {
-        opacity: 0;
-        transform: translateY(-20px);
-    } to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
 @keyframes fadeInUp {
     from {
         opacity: 0;
@@ -174,12 +203,14 @@ body {
     }
 }
 
+/* Responsive Adjustments */
 @media (max-width: 768px) {
     .story-section {
         flex-direction: column;
+        text-align: center;
     }
 
     .story-text {
-        padding: 30px 0 0;
+        padding-top: 30px;
     }
 }

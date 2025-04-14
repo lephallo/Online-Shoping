@@ -3,47 +3,27 @@
 
 <!-- General User Navigation Bar -->
 <nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top">
-    <a class="navbar-brand" style="margin-right: 800px;">
-        <img src="{% static 'images/logo.png' %}" alt="Pick n Pay Lesotho Logo" width="150"> <!-- Brand Image -->
-    </a>
-    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav"
-        aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-    </button>
-    <div class="collapse navbar-collapse" id="navbarNav">
-        <ul class="navbar-nav ml-auto">
-            <li class="nav-item">
-                <a class="nav-link" href="home">Home</a>
-            </li>
-            <li class="nav-item dropdown">
-                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                  Products
-                </a>
-                <ul class="dropdown-menu">
-                  <li><a class="dropdown-item" href="#">Applicances</a></li>
-                  <li><a class="dropdown-item" href="#">Homeware</a></li>
-                  <li><a class="dropdown-item" href="#">Homekeeping</a></li>
-                  <li><a class="dropdown-item" href="#">Garden & Partio</a></li>
-                  <li><a class="dropdown-item" href="#">TV, Audio & Media</a></li>
-                  <li><a class="dropdown-item" href="#">Office Supplies & Stationary</a></li>
-                  <li><a class="dropdown-item" href="#">Computer and Electronics</a></li>
-                  <li><a class="dropdown-item" href="#">Outdoor & Sports</a></li>
-                  <li><a class="dropdown-item" href="#">Baby</a></li>
-                  <li><a class="dropdown-item" href="#">Applicances</a></li>
-                  <li><a class="dropdown-item" href="#">Homeware</a></li>
-                  <li><a class="dropdown-item" href="#">Homekeeping</a></li>
-                </ul>
-              </li>
-            <li class="nav-item">
-                <a class="nav-link" href="{% url 'about_us' %}">About Us</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="#">FAQ</a>
-            </li>
-            <!-- Login/Register Links for guests -->
-            <li class="nav-item">
-                <a class="nav-link" href="#">Login</a>
-            </li>
-        </ul>
+    <div class="container-fluid d-flex justify-content-between align-items-center">
+        <a class="navbar-brand" href="#">
+            <img src="{% static 'images/logo.png' %}" alt="Pick n Pay Lesotho Logo" width="150"> <!-- Brand Image -->
+        </a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav"
+            aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+            <ul class="navbar-nav nav-margin-right">
+                <li class="nav-item">
+                    <a class="nav-link" href="home">Home</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'about_us' %}">About Us</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'login' %}">Login</a>
+                </li>
+            </ul>
+        </div>
     </div>
 </nav>

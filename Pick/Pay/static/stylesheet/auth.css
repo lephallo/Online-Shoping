@@ -1,0 +1,61 @@
+
+
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&display=swap');
+
+
+body {
+    background: linear-gradient(135deg, #fff, #CFD8DC);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: 'Outfit', sans-serif;
+}
+
+
+
+.card {
+    border: none;
+    border-radius: 1.5rem;
+    box-shadow: 0 12px 30px rgba(0, 177, 64, 0.2);
+    animation: slideUp 0.8s ease;
+    background-color: #CFD8DC;
+    font-weight: 500;
+}
+
+
+
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(40px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.form-label {
+    font-weight: 600;
+}
+
+
+.card {
+    border: none;
+    border-radius: 1.5rem;
+    box-shadow: 0 12px 30px rgba(0, 177, 64, 0.2);
+    animation: fadeIn 1s ease;
+}
+
+.btn-green {
+    background-color: #00B140;
+    color: white;
+}
+
+.btn-green:hover {
+    background-color: #009B36;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.form-label {
+    font-weight: 600;
+}

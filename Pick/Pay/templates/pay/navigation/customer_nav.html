@@ -1,46 +1,132 @@
+{% load static %}
+<link rel="stylesheet" href="{% static 'stylesheet/nav1.css' %}">
 
+<nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top shadow-sm">
+    <div class="container">
+        <a class="navbar-brand" href="#">
+            <img src="{% static 'images/logo.png' %}" alt="Pick n Pay Lesotho Logo" width="150">
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+            aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
 
-<link rel="stylesheet" href="{% static 'stylesheet/base.css' %}">
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item">
+                    <a class="nav-link active" href="{% url 'customer_dashboard' %}">Home</a>
+                </li>
 
-<!-- Customer Navigation Bar -->
-<nav class="navbar navbar-expand-lg navbar-light bg-light">
-    <a class="navbar-brand" href="#">Pick n Pay Lesotho</a>
-    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav"
-        aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-    </button>
-    <div class="collapse navbar-collapse" id="navbarNav">
-        <ul class="navbar-nav ml-auto">
-            <!-- General Links for all Users -->
-            <li class="nav-item">
-                <a class="nav-link" href="#">Home</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="#">Products</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="#">Cart (3)</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="#">About Us</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="#">Contact Us</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="#">Help/FAQ</a>
-            </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="productsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        Products
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="productsDropdown">
+                        <li><a class="dropdown-item" href="{% url 'appliances' %}">Appliances</a></li>
+                        <li><a class="dropdown-item" href="{% url 'homeware' %}">Homeware</a></li>
+                        <li><a class="dropdown-item" href="#">Homekeeping</a></li>
+                        <li><a class="dropdown-item" href="#">Garden & Patio</a></li>
+                        <li><a class="dropdown-item" href="#">TV, Audio & Media</a></li>
+                        <li><a class="dropdown-item" href="#">Office Supplies & Stationery</a></li>
+                        <li><a class="dropdown-item" href="#">Computer & Electronics</a></li>
+                        <li><a class="dropdown-item" href="#">Outdoor & Sports</a></li>
+                        <li><a class="dropdown-item" href="#">Baby</a></li>
+                    </ul>
+                </li>
 
-            <!-- Customer-specific Links -->
-            <li class="nav-item">
-                <a class="nav-link" href="#">My Account</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="#">Orders</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="#">Logout</a>
-            </li>
-        </ul>
+                <li class="nav-item">
+                  <a href="" class="nav-link" id="cart-link">
+                    Cart <span id="cart-count" class="text-danger">{{ cart_count }}</span>
+                </a>                
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link" href="#">Orders</a>
+                </li>
+
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="accountDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        My Account
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="accountDropdown">
+                        <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#profileModal">Profile</a></li>
+                        <li><a class="dropdown-item" href="#">Settings</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item text-danger" href="{% url 'logout' %}">Logout</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
     </div>
 </nav>
+
+
+
+<div class="modal fade" id="profileModal" tabindex="-1" aria-labelledby="profileModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content rounded-4 shadow-lg border-0">
+        <form method="post" action="{% url 'update_profile' %}" enctype="multipart/form-data">
+          {% csrf_token %}
+          <div class="modal-header text-white rounded-top-4" style="background-color: #CFD8DC;">
+            <h5 class="modal-title" id="profileModalLabel">Update Profile</h5>
+            <button type="button" class="btn-close btn-close-danger" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+  
+          <div class="modal-body row p-4">
+            <!-- Profile Image Column -->
+            <div class="col-md-4 text-center mb-3">
+              {% if user.profile.image %}
+                <img src="{{ user.profile.image.url }}" id="previewImage" class="img-thumbnail rounded-circle shadow-sm mb-3" style="height: 150px; width: 150px; object-fit: cover;">
+              {% else %}
+                <img src="{% static 'images/default-avatar.png' %}" id="previewImage" class="img-thumbnail rounded-circle shadow-sm mb-3" style="height: 150px; width: 150px; object-fit: cover;">
+              {% endif %}
+              <input type="file" name="image" class="form-control" accept="image/*" onchange="previewSelectedImage(this)">
+            </div>
+  
+            <!-- Form Fields Column -->
+            <div class="col-md-8">
+              <div class="mb-3">
+                <label class="form-label">Full Name</label>
+                <input type="text" name="full_name" class="form-control" value="{{ user.get_full_name }}" placeholder="John Doe">
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Username</label>
+                <input type="text" name="username" class="form-control" value="{{ user.username }}" required>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Email</label>
+                <input type="email" name="email" class="form-control" value="{{ user.email }}" required>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Contact Number</label>
+                <input type="text" name="contact" class="form-control" value="{{ user.profile.contact }}">
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Location</label>
+                <input type="text" name="location" class="form-control" value="{{ user.profile.location }}">
+              </div>
+            </div>
+          </div>
+  
+          <div class="modal-footer rounded-bottom-4" style="background-color: #CFD8DC;">
+            <button type="submit" class="btn px-4" style="background-color: #78909C; color: #ffffff">Update Profile</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  
+  <script>
+    function previewSelectedImage(input) {
+      const file = input.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          document.getElementById('previewImage').src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+  </script>
+  

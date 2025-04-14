@@ -1,0 +1,269 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Appliances - Pick n Pay</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            background-color: #f2f2f2;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .subcategory-title {
+            margin-top: 50px;
+            font-size: 1.8rem;
+            font-weight: 700;
+            border-left: 6px solid #E53935;
+            padding-left: 15px;
+            color: #333;
+        }
+
+        .product-card {
+            position: relative;
+            border-top-right-radius: 0px;
+            border-top-left-radius: 0px;
+            border-bottom-left-radius: 25px;
+            border-bottom-right-radius: 25px;
+            overflow: hidden;
+            height: 380px;
+            background-color: white;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .product-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+        }
+
+        .product-img-wrapper {
+            position: relative;
+            height: 90%;
+            width: 100%;
+        }
+
+        .product-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .info-box {
+            position: absolute;
+            bottom: 0px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #F5F5F5;
+            padding: 5px 10px;
+            border-top-radius-right: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            width: 85%;
+            border: 1px solid #E53935;
+            border-bottom: 0px;
+            border-top-right-radius: 10px;
+            border-top-left-radius: 10px;
+
+        }
+
+        .product-name {
+            font-weight: 600;
+            font-size: 1.3rem;
+            color: #E53935;
+        }
+
+        .price {
+            color: #90A4AE;
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        .add-to-cart-btn {
+            background-color: #E53935;
+            color: white;
+            border: none;
+            border-radius: 0 0 25px 25px;
+            padding: 12px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: background-color 0.3s ease;
+            width: 100%;
+        }
+
+        .add-to-cart-btn:hover {
+            background-color: #90A4AE;
+        }
+
+        .card-bottom {
+            margin-top: auto;
+        }
+    </style>
+</head>
+<body>
+
+    {% include "pay/navigation/customer_nav.html" %}
+
+    <div class="container mt-6 pt-5">
+        <h2 class="mb-6">🛒 Appliances</h2>
+    
+        {% for section in appliance_sections %}
+            <div class="subcategory-title">{{ section.name }}</div>
+    
+            {% if section.products %}
+            <div class="row mt-4">
+                {% for product in section.products %}
+                <div class="col-md-3 mb-5">
+                    <div class="product-card">
+                        <div class="product-img-wrapper">
+                            <img src="{{ product.image.url }}" alt="{{ product.name }}" class="product-img">
+                            <div class="info-box">
+                                <div class="product-name">{{ product.name }}</div>
+                                <div class="price">M{{ product.price }}</div>
+                            </div>
+                        </div>
+                        <form method="post" class="card-bottom" id="addToCartForm">
+                            {% csrf_token %}
+                            <input type="hidden" name="product_id" value="{{ product.product_id }}">
+                            <button type="button" class="add-to-cart-btn" data-product-id="{{ product.product_id }}">Add to Cart</button>
+                        </form>                        
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-muted">No products found in this subcategory.</p>
+            {% endif %}
+        {% endfor %}
+    
+    </div>
+
+
+
+
+    <!-- Cart Modal -->
+    <div class="modal fade" id="cartModal" tabindex="-1" aria-labelledby="cartModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header" style="background-color: #CFD8DC; color: #ffffff;">
+                    <h5 class="modal-title" id="cartModalLabel">Product Added to Cart</h5>
+                </div>
+                <div class="modal-body"  style="background-color: #EFEBE9;">
+                    <div id="cart-items-list">
+                        <!-- Cart items will be injected here by JavaScript -->
+                    </div>
+                    <h2>Total Amount: M<span id="modal-total-price">0</span></h2>
+                </div>
+                <div class="modal-footer" style="background-color: #CFD8DC; color: #ffffff;">
+                    <button type="button" class="btn" id="make-payment-btn" style="background-color: #78909C; color: #ffffff">Make Payment</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+
+  
+
+ 
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('.add-to-cart-btn').click(function(e) {
+                e.preventDefault();
+                const button = $(this);
+                const productId = button.data('product-id');  // Use the data-attribute directly
+            
+                $.ajax({
+                    url: '{% url "add_to_cart" %}',
+                    method: 'POST',
+                    data: {
+                        product_id: productId,
+                        quantity: 1,
+                        csrfmiddlewaretoken: '{{ csrf_token }}'
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            // Update Cart Modal with the new cart items
+                            let cartItemsHtml = '';
+                            response.cart_items.forEach(item => {
+                                cartItemsHtml += `
+                                    <div class="cart-item d-flex justify-content-between align-items-center">
+                                        <div class="cart-item-details">
+                                            <div class="fw-bold">${item.name}</div>
+                                            <div>Price: M${item.price} x ${item.quantity}</div>
+                                            <div>Total: M${item.total_price}</div>
+                                        </div>
+                                        <button class="btn btn-danger delete-item-btn" data-product-id="${item.product_id}">Delete</button>
+                                    </div>
+                                    <hr>
+                                `;
+                            });
+        
+                            // Inject cart items and total price into the modal
+                            $('#cart-items-list').html(cartItemsHtml);
+                            $('#modal-total-price').text(response.total_price);
+        
+                            const modal = new bootstrap.Modal(document.getElementById('cartModal'));
+                            modal.show();
+        
+                            // Update the Cart nav-link item count
+                            $('#cart-count').text(response.total_items);  // Update cart item count
+                        }
+                    },
+                    error: function(err) {
+                        alert("Something went wrong while adding to cart.");
+                    }
+                });
+            });
+        
+            // Handle item deletion
+            $(document).on('click', '.delete-item-btn', function() {
+                const button = $(this);
+                const productId = button.data('product-id');
+                
+                $.ajax({
+                    url: '{% url "remove_from_cart" %}',  // Define this view to handle item removal
+                    method: 'POST',
+                    data: {
+                        product_id: productId,
+                        csrfmiddlewaretoken: '{{ csrf_token }}'
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            // Re-render cart modal with updated items
+                            $('#cart-items-list').html('');
+                            response.cart_items.forEach(item => {
+                                $('#cart-items-list').append(`
+                                    <div class="cart-item d-flex justify-content-between align-items-center">
+                                        <div class="cart-item-details">
+                                            <div>${item.name}</div>
+                                            <div>Price: M${item.price} x ${item.quantity}</div>
+                                            <div>Total: M${item.total_price}</div>
+                                        </div>
+                                        <button class="btn btn-danger delete-item-btn" data-product-id="${item.product_id}">Delete</button>
+                                    </div>
+                                    <hr>
+                                `);
+                            });
+        
+                            $('#modal-total-price').text(response.total_price);
+                        }
+                    },
+                    error: function(err) {
+                        alert("Something went wrong while removing item from cart.");
+                    }
+                });
+            });
+        });
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

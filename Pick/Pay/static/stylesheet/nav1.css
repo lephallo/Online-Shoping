@@ -40,8 +40,8 @@ body {
     transition: color 0.3s ease, transform 0.3s ease; /* Add smooth animation for color and scale */
 }
 
-.navbar-nav .nav-item .nav-link:hover {
-    color: #00B140; /* Highlight color for navbar links */
+.nav-link:hover {
+    color: #D32F2F; /* Highlight color for navbar links */
     text-decoration: none;
     transform: scale(1.05); /* Slight zoom effect */
 }
@@ -65,17 +65,19 @@ body {
     color: #333;
 }
 
-/* Mobile View Adjustment */
-@media (max-width: 768px) {
-    .navbar-nav {
-        text-align: center;
+
+/* Custom right margin for nav links container */
+.nav-margin-right {
+    margin-right: 30px;
+}
+
+@media (max-width: 576px) {
+    .nav-margin-right {
+        margin-right: 15px; /* reduce margin for very small screens */
     }
 
-    .navbar-nav .nav-item {
-        margin-bottom: 10px;
-    }
-
-    .navbar-nav .nav-link {
-        font-size: 1.1rem;
+    .navbar-brand img {
+        width: 120px; /* slightly smaller logo */
     }
 }
+
