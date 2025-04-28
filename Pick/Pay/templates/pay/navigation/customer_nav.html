@@ -12,7 +12,7 @@
         </button>
 
         <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav ms-auto">
+            <ul class="navbar-nav ms-auto me-3">
                 <li class="nav-item">
                     <a class="nav-link active" href="{% url 'customer_dashboard' %}">Home</a>
                 </li>
@@ -24,13 +24,10 @@
                     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="productsDropdown">
                         <li><a class="dropdown-item" href="{% url 'appliances' %}">Appliances</a></li>
                         <li><a class="dropdown-item" href="{% url 'homeware' %}">Homeware</a></li>
-                        <li><a class="dropdown-item" href="#">Homekeeping</a></li>
-                        <li><a class="dropdown-item" href="#">Garden & Patio</a></li>
-                        <li><a class="dropdown-item" href="#">TV, Audio & Media</a></li>
-                        <li><a class="dropdown-item" href="#">Office Supplies & Stationery</a></li>
-                        <li><a class="dropdown-item" href="#">Computer & Electronics</a></li>
-                        <li><a class="dropdown-item" href="#">Outdoor & Sports</a></li>
-                        <li><a class="dropdown-item" href="#">Baby</a></li>
+                        <li><a class="dropdown-item" href="{% url 'groceries' %}">Groceries</a></li>
+                        <li><a class="dropdown-item" href="{% url 'tv' %}">TV, Audio & Media</a></li>
+                        <li><a class="dropdown-item" href="{% url 'computer' %}">Computer & Electronics</a></li>
+                        <li><a class="dropdown-item" href="{% url 'baby' %}">Baby</a></li>
                     </ul>
                 </li>
 
@@ -43,6 +40,10 @@
                 <li class="nav-item">
                     <a class="nav-link" href="#">Orders</a>
                 </li>
+
+                <li class="nav-item">
+                  <a class="nav-link" href="{% url 'cart_history' %}">Payments</a>
+              </li>
 
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" id="accountDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">

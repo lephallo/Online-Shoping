@@ -59,3 +59,13 @@ body {
 .form-label {
     font-weight: 600;
 }
+
+.card {
+    max-width: 400px;
+    margin: 100px auto;
+    padding: 30px;
+    border-radius: 1.5rem;
+    animation: slideUp 0.8s ease;
+    background-color: #CFD8DC;
+    box-shadow: 0 12px 30px rgba(0, 177, 64, 0.2);
+}

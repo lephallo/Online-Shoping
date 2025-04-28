@@ -1,0 +1,34 @@
+
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&display=swap');
+
+
+body {
+    
+    background: linear-gradient(135deg, #fff, #CFD8DC);
+    font-family: 'Outfit', sans-serif;
+}
+
+.login-card {
+    max-width: 400px;
+    margin: 100px auto;
+    padding: 30px;
+    border-radius: 20px;
+    background-color: #CFD8DC;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    height: 100%;
+}
+
+.form-control {
+    border-radius: 10px;
+}
+
+
+
+.login-header {
+    color: #37474F;
+}
+
+.message {
+    color: red;
+    font-size: 0.9rem;
+}

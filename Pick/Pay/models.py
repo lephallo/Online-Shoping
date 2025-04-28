@@ -1,69 +1,63 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.utils.timezone import now
+import uuid
 
 
 class Product(models.Model):
     CATEGORY_CHOICES = [
         ('Appliances', 'Appliances'),
         ('Baby', 'Baby'),
-        ('Clothing', 'Clothing'),
         ('Computer & Electronics', 'Computer & Electronics'),
         ('Groceries', 'Groceries'),
-        ('Garden & Partio', 'Garden & Partio'),
         ('Homeware', 'Homeware'),
-        ('Homekeeping', 'Homekeeping'),
-        ('Outdoor & Sports', 'Outdoor & Sports'),
-        ('Office Supplies & Stationary', 'Office Supplies & Stationary'),
         ('TV, Audio & Media', 'TV, Audio & Media'),        
     ]
 
     SUBCATEGORY_CHOICES = [
         # Appliances
-        # Kitchen Appliances
         ('Refrigerators & Freezers', 'Refrigerators & Freezers'),
         ('Microwaves', 'Microwaves'),
         ('Ovens & Stoves', 'Ovens & Stoves'),
-        ('Dishwashers', 'Dishwashers'),
-        ('Blenders & Juicers', 'Blenders & Juicers'),
-        ('Toasters & Sandwich Makers', 'Toasters & Sandwich Makers'),
-        ('Coffee Machines & Kettles', 'Coffee Machines & Kettles'),
-        ('Food Processors', 'Food Processors'),
-
-        # Laundry Appliances
-        ('Washing Machines', 'Washing Machines'),
-        ('Tumble Dryers', 'Tumble Dryers'),
         ('Steam Irons & Garment Steamers', 'Steam Irons & Garment Steamers'),
-
-        # Cooling & Heating
         ('Air Conditioners', 'Air Conditioners'),
-        ('Fans', 'Fans'),
-        ('Heaters', 'Heaters'),
-        ('Electric Blankets', 'Electric Blankets'),
 
         # Homewares
-        # Kitchen & Dining
         ('Cookware', 'Cookware'),
-        ('Utensils & Cutlery', 'Utensils & Cutlery'),
         ('Dinnerware', 'Dinnerware'),
         ('Glassware', 'Glassware & Mugs'),
-        ('Storage', 'Food Storage'),
-        ('Appliances', 'Kitchen Appliances'),
+        ('Curtains & Blinds', 'Curtains & Blinds'),
+        ('Wall Art & Frames', 'Wall Art & Frames'),
+        ('Bedding', 'Bedding'),
+        ('Wardrobes & Drawers', 'Wardrobes & Drawers'),
 
-        # Living Room
-        ('cushions', 'Cushions & Throws'),
-        ('curtains', 'Curtains & Blinds'),
-        ('rugs', 'Rugs & Carpets'),
-        ('lighting', 'Lamps & Lighting'),
-        ('tables', 'Coffee/Side Tables'),
-        ('wallart', 'Wall Art & Frames'),
+        # Baby
+        ('Baby & Toddler Food', 'Baby & Toddler Food'),
+        ('Baby Care', 'Baby Care'),
+        ('Nappies & Wipes', 'Nappies & Wipes'),
+        ('Baby Clothing', 'Baby Clothing'),
 
-        # Bedroom
-        ('bedding', 'Bedding'),
-        ('mattresses', 'Mattresses'),
-        ('wardrobes', 'Wardrobes & Drawers'),
-        ('lamps', 'Bedside Lamps'),
-        ('blankets', 'Blankets'),
+        # Computer and Electronics
+        ('Computers, Laptops & Tablets', 'Computers, Laptops & Tablets'),
+        ('Accessories', 'Accessories'),
+        ('Powerbanks', 'Powerbanks'),
+        ('Mouse, Keyboards & Speakers', 'Mouse, Keyboards & Speakers'),
+        ('Cables & Connectors', 'Cables & Connectors'),
+
+
+        # Groceries
+        ('Fresh Produce', 'Fresh Produce'),
+        ('Meet & Poultry', 'Meet & Poultry'),
+        ('Bakery', 'Bakery'),
+        ('Frozen Foods', 'Frozen Foods'),
+        ('Snacks & Confectionery', 'Snacks & Confectionery'),
+
+        # TV, Audio and Media
+        ('Televisions', 'Televisions'),
+        ('Soundbars & Speakers', 'Soundbars & Speakers'),
+        ('Headphones & Earphones', 'Headphones & Earphones'),
+        ('Media Players & Decoders', 'Media Players & Decoders'),
+        ('TV Accessories', 'TV Accessories'),
     ]
 
     product_id = models.AutoField(primary_key=True)
@@ -93,7 +87,6 @@ class Profile(models.Model):
 
 
 
-
 class Cart(models.Model):
     cart_id = models.AutoField(primary_key=True)
     customer_id = models.ForeignKey(User, on_delete=models.CASCADE, related_name='carts')
@@ -118,4 +111,40 @@ class CartItem(models.Model):
 
     def __str__(self):
         return f"{self.quantity} × {self.product_id.name}"
+
+
+
+class Transaction(models.Model):
+    STATUS_CHOICES = [
+        ('success', 'Success'),
+        ('failed', 'Failed'),
+        ('pending', 'Pending'),
+    ]
+
+    PAYMENT_METHOD_CHOICES = [
+        ('Credit Card', 'Credit Card'),
+        ('Debit Card', 'Debit Card'),
+        ('Mpesa', 'Mpesa'),
+        ('EcoCash', 'EcoCash'),
+        ('C-Pay', 'C-Pay'),
+        ('PayPal', 'PayPal'),
+        ('Crypto', 'Crypto'),
+    ]
+
+    transaction_id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='transactions')
+    cart_snapshot = models.JSONField()  # Stores what was in the cart at purchase time
+    total_amount = models.DecimalField(max_digits=10, decimal_places=2)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    payment_method = models.CharField(max_length=30, choices=PAYMENT_METHOD_CHOICES, null=True, blank=True)
+    created_at = models.DateTimeField(default=now)
+    reference = models.CharField(max_length=100, unique=True, blank=True)
+
+    def save(self, *args, **kwargs):
+        if not self.reference:
+            self.reference = str(uuid.uuid4())[:12].replace('-', '')
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.transaction_id} - {self.user.username} - {self.status} - {self.payment_method or 'N/A'}"
 

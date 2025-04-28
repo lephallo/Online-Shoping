@@ -1,8 +1,16 @@
 from django.contrib import admin
+
 from .models import Product
 from .models import Profile
 from .models import Cart
 from .models import CartItem
+from .models import Transaction
+
+
+admin.site.site_header = "Pick n Pay Lesotho Administration"
+admin.site.site_title = "Pick n Pay Lesotho Admin Portal"
+admin.site.index_title = "Welcome to Pick n Pay Lesotho Admin"
+
 
 # Register the Product model
 class ProductAdmin(admin.ModelAdmin):
@@ -19,6 +27,8 @@ class ProfileAdmin(admin.ModelAdmin):
 
 admin.site.register(Profile, ProfileAdmin)
 
+
+
 # Register the Cart model
 class CartAdmin(admin.ModelAdmin):
     list_display = ('customer_id', 'created_at', 'total_items', 'total_price')
@@ -26,9 +36,19 @@ class CartAdmin(admin.ModelAdmin):
 
 admin.site.register(Cart, CartAdmin)
 
+
+
 # Register the CartItem model
 class CartItemAdmin(admin.ModelAdmin):
     list_display = ('cart_id', 'product_id', 'quantity')
     search_fields = ('product_id__name', 'cart_id__customer_id__username')
 
 admin.site.register(CartItem, CartItemAdmin)
+
+
+
+@admin.register(Transaction)
+class TransactionAdmin(admin.ModelAdmin):
+    list_display = ('reference', 'user', 'total_amount', 'status', 'created_at')
+    search_fields = ('reference', 'user__username')
+

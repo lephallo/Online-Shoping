@@ -9,15 +9,55 @@ from django.shortcuts import get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.timezone import now
 from django.http import JsonResponse
+import json
+from collections import Counter
+from django.contrib.auth.models import Group
+from functools import wraps
+import uuid
+from django.contrib.auth.decorators import login_required
+from django.db.models import Sum
+from django.db.models import Count
+from django.db.models import Avg
+from django.db.models.functions import TruncDay
+from django.db.models.functions import TruncDate
+from django.contrib.auth import get_user_model
 
 from .models import Product
 from .models import Profile
 from .models import Cart
 from .models import CartItem
+from .models import Transaction
+
+from .mongo import save_rating
+from .mongo import log_activity 
+from .mongo import ratings_collection
 
 from .forms import ProductForm
 from .forms import SignUpForm
 from .forms import LoginForm
+
+
+
+ALLOWED_GROUPS = ['Operations Manager', 'Inventory Manager', 'Store Manager']
+
+def custom_login_view(request):
+    if request.method == 'POST':
+        username = request.POST['username']
+        password = request.POST['password']
+
+        user = authenticate(request, username=username, password=password)
+
+        if user is not None:
+            if user.groups.filter(name__in=ALLOWED_GROUPS).exists():
+                login(request, user)
+                return redirect('admin_dashboard')  # Use your URL name
+            else:
+                messages.error(request, 'You do not have access to the admin dashboard.')
+        else:
+            messages.error(request, 'Invalid username or password.')
+
+    return render(request, 'pay/auth/admin_login.html')
+
 
 
 
@@ -47,26 +87,81 @@ def about(request):
     return render(request, 'pay/landing_pages/about.html')
 
 
+
+
+def in_allowed_groups(user):
+    return user.groups.filter(name__in=ALLOWED_GROUPS).exists()
+
+
+
+def group_required(view_func):
+    @wraps(view_func)
+    def _wrapped_view(request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return redirect('custom_login')  # custom login URL name
+        if not in_allowed_groups(request.user):
+            return redirect('custom_login')  # or a 403 page
+        return view_func(request, *args, **kwargs)
+    return _wrapped_view
+
+
+
+# @login_required(login_url='custom_login')
+@group_required
 def admin_dashboard(request):
     low_stock_threshold = 10
-    
-    # Corrected the condition syntax
+
+    # Stock alerts
     if 1 <= low_stock_threshold <= 10:
         low_stock_count = Product.objects.filter(stock__lt=low_stock_threshold, stock__gt=0).count()
     else:
-        low_stock_count = 0  # Ensure variable is defined if condition is False
+        low_stock_count = 0
 
     out_of_stock_count = Product.objects.filter(stock=0).count()
     total_attention_items = low_stock_count + out_of_stock_count
+
+    # MongoDB: Ratings Analysis
+    all_ratings = list(ratings_collection.find({}))
+
+    rating_counts = Counter([r['product_id'] for r in all_ratings])
+    five_star_counts = Counter([r['product_id'] for r in all_ratings if r['rating'] == 5])
+
+    most_rated = rating_counts.most_common(1)[0] if rating_counts else (None, 0)
+    least_rated = min(rating_counts.items(), key=lambda x: x[1]) if rating_counts else (None, 0)
+    most_five_star = five_star_counts.most_common(1)[0] if five_star_counts else (None, 0)
+
+    def get_product_name(product_id):
+        try:
+            # Skip non-integer IDs
+            if not str(product_id).isdigit():
+                return "Unknown Product"
+            product = Product.objects.get(pk=int(product_id))
+            return product.name
+        except Product.DoesNotExist:
+            return "Unknown Product"
+
 
     context = {
         "low_stock_count": low_stock_count,
         "out_of_stock_count": out_of_stock_count,
         "total_attention_items": total_attention_items,
-        "user": request.user, 
+        "user": request.user,
+        "most_rated_product": {
+            "name": get_product_name(most_rated[0]),
+            "count": most_rated[1]
+        },
+        "least_rated_product": {
+            "name": get_product_name(least_rated[0]),
+            "count": least_rated[1]
+        },
+        "most_five_star_product": {
+            "name": get_product_name(most_five_star[0]),
+            "count": most_five_star[1]
+        }
     }
 
     return render(request, 'pay/managers/dashboard.html', context)
+
 
 
 
@@ -92,12 +187,21 @@ def product_management(request):
     })
 
 
+def is_customer(user):
+    return user.groups.filter(name='Customer').exists()
+
+
 
 def signup_view(request):
     if request.method == 'POST':
         form = SignUpForm(request.POST)
         if form.is_valid():
             user = form.save()
+
+            # Add user to Customer group
+            customer_group, created = Group.objects.get_or_create(name='Customer')
+            user.groups.add(customer_group)
+
             return redirect('login') 
     else:
         form = SignUpForm()
@@ -110,8 +214,12 @@ def login_view(request):
         form = LoginForm(data=request.POST)
         if form.is_valid():
             user = form.get_user()
-            login(request, user)
-            return redirect('customer_dashboard')
+
+            if is_customer(user):
+                login(request, user)
+                return redirect('customer_dashboard')
+            else:
+                return redirect('customer_login')  # or reload login page with error
     else:
         form = LoginForm()
     return render(request, 'pay/auth/cus_login.html', {'form': form})
@@ -124,14 +232,27 @@ def logout_view(request):
 
 
 
+def admin_logout_view(request):
+    logout(request)
+    return redirect('custom_login')
+
+
+
+
+@login_required(login_url='login')  
 def customer_dashboard(request):
+    if not is_customer(request.user):
+        messages.error(request, "Access denied: You do not belong to the Customer group.")
+        return redirect('login') 
+
     featured_products = Product.objects.filter(is_featured=True).order_by('-created_at')[:4]
 
-    return render(request, 'pay/customer/dashboard.html', {
+    context = {
         'featured_products': featured_products,
-    })
+        'user': request.user
+    }
 
-
+    return render(request, 'pay/customer/dashboard.html', context) 
 
 
 
@@ -139,6 +260,20 @@ def delete_product(request, pk):
     product = get_object_or_404(Product, pk=pk)
     product.delete()
     return redirect('product_management')
+
+
+
+
+def edit_product(request, pk):
+    product = get_object_or_404(Product, pk=pk)
+    if request.method == 'POST':
+        form = ProductForm(request.POST, request.FILES, instance=product)
+        if form.is_valid():
+            form.save()
+            return redirect('product_management')  # or wherever your product list lives
+    else:
+        form = ProductForm(instance=product)
+    
 
 
 
@@ -336,7 +471,6 @@ def remove_from_cart(request):
 
 
 
-
 def cart_item_count(request):
     if request.user.is_authenticated:
         count = CartItem.objects.filter(user=request.user).count()
@@ -346,3 +480,401 @@ def cart_item_count(request):
 
 
 
+
+@csrf_exempt
+def reduce_cart_item_quantity(request):
+    if request.method == 'POST':
+        item_id = request.POST.get('item_id')
+        try:
+            cart_item = CartItem.objects.get(pk=item_id)
+            if cart_item.quantity > 1:
+                cart_item.quantity -= 1
+                cart_item.save()
+            else:
+                cart_item.delete()
+            return JsonResponse({'success': True, 'quantity': cart_item.quantity if cart_item.quantity > 0 else 0})
+        except CartItem.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'Item not found'})
+    return JsonResponse({'success': False, 'error': 'Invalid request'})
+
+
+
+def baby(request):
+    # Filter all Appliance products
+    appliances = Product.objects.filter(category='Baby')
+
+    # Group products dynamically by subcategory
+    grouped_appliances = {}
+    for product in appliances:
+        subcat = product.subcategory or "Other"
+        grouped_appliances.setdefault(subcat, []).append(product)
+
+    # Prepare data for rendering
+    appliance_sections = []
+    for subcategory_name, products in grouped_appliances.items():
+        appliance_sections.append({
+            'name': subcategory_name,
+            'products': products
+        })
+
+    context = {
+        'appliance_sections': appliance_sections
+    }
+
+    return render(request, 'pay/products/baby.html', context)
+
+
+
+def computer(request):
+    # Filter all Appliance products
+    appliances = Product.objects.filter(category='Computer & Electronics')
+
+    # Group products dynamically by subcategory
+    grouped_appliances = {}
+    for product in appliances:
+        subcat = product.subcategory or "Other"
+        grouped_appliances.setdefault(subcat, []).append(product)
+
+    # Prepare data for rendering
+    appliance_sections = []
+    for subcategory_name, products in grouped_appliances.items():
+        appliance_sections.append({
+            'name': subcategory_name,
+            'products': products
+        })
+
+    context = {
+        'appliance_sections': appliance_sections
+    }
+
+    return render(request, 'pay/products/computer.html', context)
+
+
+
+def groceries(request):
+    # Filter all Appliance products
+    appliances = Product.objects.filter(category='Groceries')
+
+    # Group products dynamically by subcategory
+    grouped_appliances = {}
+    for product in appliances:
+        subcat = product.subcategory or "Other"
+        grouped_appliances.setdefault(subcat, []).append(product)
+
+    # Prepare data for rendering
+    appliance_sections = []
+    for subcategory_name, products in grouped_appliances.items():
+        appliance_sections.append({
+            'name': subcategory_name,
+            'products': products
+        })
+
+    context = {
+        'appliance_sections': appliance_sections
+    }
+
+    return render(request, 'pay/products/groceries.html', context)
+
+
+
+def televisions(request):
+    # Filter all Appliance products
+    digital_appliances = Product.objects.filter(category='TV, Audio & Media')
+
+    # Group products dynamically by subcategory
+    grouped_by_digitals = {}
+    for product in digital_appliances:
+        subcat = product.subcategory or "Other"
+        grouped_by_digitals.setdefault(subcat, []).append(product)
+
+    # Prepare data for rendering
+    appliance_sections = []
+    for subcategory_name, products in grouped_by_digitals.items():
+        appliance_sections.append({
+            'name': subcategory_name,
+            'products': products
+        })
+
+    context = {
+        'appliance_sections': appliance_sections
+    }
+
+    return render(request, 'pay/products/tv.html', context)
+
+@login_required
+def submit_rating(request):
+    if request.method == "POST":
+        try:
+            # Parse the incoming JSON data
+            data = json.loads(request.body)
+            product_id = data.get("product_id")
+            rating = data.get("rating")
+
+            if not rating:
+                return JsonResponse({"success": False, "error": "Rating is required"})
+
+            rating = int(rating)
+            if rating < 1 or rating > 5:
+                return JsonResponse({"success": False, "error": "Invalid rating value"})
+
+            user_id = request.user.id
+            username = request.user.username
+
+            # Save the rating to MongoDB
+            save_rating(product_id, rating, user_id, username)
+
+            return JsonResponse({"success": True})
+
+        except Exception as e:
+            return JsonResponse({"success": False, "error": str(e)})
+
+    return JsonResponse({"success": False, "error": "Invalid request method"})
+
+
+
+# Saving Activity Logs to MongoDB
+@csrf_exempt
+def log_activity_view(request):
+    if request.method == "POST":
+        data = json.loads(request.body)
+        user_id = request.user.id if request.user.is_authenticated else None
+        username = request.user.username if request.user.is_authenticated else "anonymous"
+        action = data.get("action")
+        product_id = data.get("product_id")
+        page_url = data.get("page_url")
+
+        log_activity(user_id, username, action, product_id, page_url)
+        return JsonResponse({"success": True})
+    return JsonResponse({"error": "Invalid method"}, status=405)
+
+
+
+@login_required
+def process_payment(request):
+    user = request.user
+
+    try:
+        cart = Cart.objects.get(customer_id=user)
+        cart_items = cart.items.all()
+
+        # Serialize cart items
+        cart_data = []
+        total = 0
+        for item in cart_items:
+            item_total = item.product_id.price * item.quantity
+            total += item_total
+            cart_data.append({
+                'product_id': item.product_id.product_id,
+                'product_name': item.product_id.name,
+                'price': float(item.product_id.price),
+                'quantity': item.quantity,
+                'total': float(item_total),
+            })
+
+        # Create Transaction record
+        transaction = Transaction.objects.create(
+            user=user,
+            cart_snapshot=cart_data,
+            reference=str(uuid.uuid4())[:12].replace('-', ''),
+            total_amount=total,
+            status='success'
+        )
+
+        # Clear the cart after purchase
+        cart_items.delete()
+
+        return redirect('payment_success', transaction_id=transaction.transaction_id)
+
+    except Cart.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'Cart not found'})
+
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
+
+
+@login_required
+def payment_success(request, transaction_id):
+    transaction = get_object_or_404(Transaction, transaction_id=transaction_id, user=request.user)
+    return render(request, 'pay/customer/payment_success.html', {'transaction': transaction})
+
+
+    
+
+@login_required
+def cart_history(request):
+    user = request.user
+
+    # Paid Carts (transactions)
+    paid_transactions = Transaction.objects.filter(user=user, status='success').order_by('-created_at')
+
+    # Pending Cart (current cart with items, unpaid)
+    try:
+        pending_cart = Cart.objects.get(customer_id=user)
+        pending_items = pending_cart.items.all()
+        pending_cart_data = []
+        total = 0
+
+        for item in pending_items:
+            item_total = item.product_id.price * item.quantity
+            total += item_total
+            pending_cart_data.append({
+                'product_id': item.product_id.product_id,
+                'product_name': item.product_id.name,
+                'price': float(item.product_id.price),
+                'quantity': item.quantity,
+                'total': float(item_total),
+            })
+    except Cart.DoesNotExist:
+        pending_cart_data = []
+        total = 0
+
+    context = {
+        'transactions': paid_transactions,
+        'pending_cart_data': pending_cart_data,
+        'pending_total': total,
+    }
+
+    return render(request, 'pay/customer/cart_history.html', context)
+
+
+
+
+def all_transactions_view(request):
+    transactions = Transaction.objects.all().order_by('-created_at')
+    return render(request, 'pay/managers/all_transactions.html', {'transactions': transactions})
+
+
+
+
+User = get_user_model()
+
+def sales_report_view(request):
+    transactions = Transaction.objects.filter(status='success')
+
+    # Revenue & volume
+    total_revenue = transactions.aggregate(total=Sum('total_amount'))['total'] or 0
+    total_transactions = transactions.count()
+    avg_transaction_value = transactions.aggregate(avg=Avg('total_amount'))['avg'] or 0
+
+    # Revenue by Day (convert QuerySet to list of dicts)
+    revenue_by_day = (
+        Transaction.objects.filter(status="success")
+        .annotate(day=TruncDate("created_at"))
+        .values("day")
+        .annotate(total=Sum("total_amount"))
+        .order_by("day")
+    )
+
+    # Convert to list of dicts (JSON serializable)
+    revenue_by_day = list(revenue_by_day)
+
+    # Step 1: Build a dictionary of product sales
+    product_sales_dict = {}
+
+    for txn in Transaction.objects.filter(status="success"):
+        for item in txn.cart_snapshot:
+            name = item["product_name"]
+            quantity = item["quantity"]
+            price = item["price"]
+            if name not in product_sales_dict:
+                product_sales_dict[name] = {"quantity": 0, "revenue": 0}
+            product_sales_dict[name]["quantity"] += quantity
+            product_sales_dict[name]["revenue"] += quantity * float(price)
+
+    # Step 2: Convert to a list to be passed to the template (JSON serializable)
+    product_sales = [{"product": name, **data} for name, data in product_sales_dict.items()]
+
+
+    # Customer insights
+    unique_customers = transactions.values('user').distinct().count()
+    customer_spending = (
+        transactions.values('user')
+        .annotate(spent=Sum('total_amount'))
+        .order_by('-spent')
+    )
+    top_customers = customer_spending[:5]
+
+    context = {
+        'total_revenue': total_revenue,
+        'total_transactions': total_transactions,
+        'avg_transaction_value': avg_transaction_value,
+        'revenue_by_day': revenue_by_day,
+        'unique_customers': unique_customers,
+        'top_customers': top_customers,
+        "revenue_by_day": revenue_by_day,
+        "product_sales": product_sales,
+    }
+
+    return render(request, 'pay/managers/sales_report.html', context)
+
+
+
+
+def log_user_activity(request):
+    if request.method == "POST":
+        data = request.POST
+        action = data.get('action')
+        product_id = data.get('product_id', None)
+        page_url = data.get('page_url', None)
+
+        # Save activity
+        log_activity(
+            user_id=None,  # Anonymous user
+            username="Guest",
+            action=action,
+            product_id=product_id,
+            page_url=page_url
+        )
+        return JsonResponse({"status": "success"})
+    return JsonResponse({"status": "error", "message": "Invalid request"}, status=400)
+
+
+
+
+def guest_orders_page(request):
+    return render(request, 'pay/guest_customer/orders.html')
+
+
+
+def make_payment(request):
+    # Render the make_payment page
+    return render(request, 'pay/guest_customer/make_payment.html')
+
+
+
+def process_payment(request):
+    if request.method == 'POST':
+        payment_method = request.POST.get('payment_method')
+
+        # Retrieve the cart and total_amount from session or localStorage
+        cart = request.session.get('cart', [])
+        total_amount = sum(item['price'] * item['quantity'] for item in cart)
+
+        # Create the transaction
+        transaction = Transaction.objects.create(
+            user=request.user,
+            cart_snapshot=cart,
+            total_amount=total_amount,
+            status='pending',
+            payment_method=payment_method
+        )
+
+        # Here, simulate payment processing, or integrate with real payment gateway
+
+        # Update transaction status based on payment success (for now, we simulate 'success')
+        transaction.status = 'success'
+        transaction.save()
+
+        # Redirect to success page
+        return redirect('transaction_success', reference=transaction.reference)
+
+    return JsonResponse({'success': False, 'message': 'Invalid payment request'})
+
+
+
+
+def guest_transaction_success(request, reference):
+    # Get the transaction based on the reference ID
+    transaction = get_object_or_404(Transaction, reference=reference)
+    
+    return render(request, 'pay/guest_customer/transaction_success.html', {'transaction': transaction})

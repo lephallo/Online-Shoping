@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Payment Success</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Outfit', sans-serif;
+      background-color: #f8f9fa;
+    }
+    .thank-you-card {
+      max-width: 600px;
+      margin: 50px auto;
+      padding: 2rem;
+      background-color: #CFD8DC;
+      border-radius: 16px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    .thank-you-card h2 {
+      color: #000;
+    }
+    .btn-go-home {
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="thank-you-card text-center">
+  <h2>Thank You for Your Purchase!</h2>
+  <p class="lead">Your payment was successful.</p>
+  <hr>
+  <p><strong>Transaction ID:</strong> {{ transaction.transaction_id }}</p>
+  <p><strong>Total Amount:</strong> M{{ transaction.total_amount }}</p>
+  <p><strong>Status:</strong> {{ transaction.status|capfirst }}</p>
+  <p><strong>Date:</strong> {{ transaction.created_at|date:"M d, Y H:i" }}</p>
+  <p class="mt-4">We appreciate your business. Hope to see you again soon!</p>
+  <hr>
+  <a href="{% url 'cart_history' %}" class="btn btn-outline-danger btn-go-home">View Cart History</a>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
