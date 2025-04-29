@@ -1,116 +1,248 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
-
     {% load static %}
-
-
-
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manager Dashboard | Pick n Pay Lesotho</title>
-    <link rel="stylesheet" href="{% static 'stylesheet/.css' %}">
+
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    
+    <!-- CSS Libraries -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'stylesheet/.css' %}">
+
+    <style>
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: linear-gradient(135deg, #ECEFF1, #FFFFFF);
+            min-height: 100vh;
+            margin: 0;
+            opacity: 0;
+            transition: opacity 1s ease-in;
+            overflow-x: hidden;
+        }
+
+        body.loaded {
+            opacity: 1;
+        }
+
+        .card {
+            backdrop-filter: blur(20px);
+            background: rgba(255, 255, 255, 0.75);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
+            transition: all 0.4s ease;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 16px 40px rgba(0,0,0,0.1);
+        }
+
+        h2.display-5 {
+            font-weight: 700;
+            color: #263238;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        h4.text-secondary {
+            color: #607D8B !important;
+            font-weight: 500;
+        }
+
+        .btn-custom {
+            border-radius: 30px;
+            padding: 12px 28px;
+            font-weight: 600;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            border: none;
+            background: linear-gradient(135deg, #2196F3, #21CBF3);
+            color: white;
+        }
+
+        .btn-custom:hover {
+            background: linear-gradient(135deg, #21CBF3, #2196F3);
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(33, 203, 243, 0.4);
+        }
+
+        .gradient-text {
+            background: linear-gradient(to right, #2196F3, #21CBF3);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .section-title {
+            font-weight: 600;
+            font-size: 22px;
+            margin-bottom: 20px;
+            color: #37474F;
+        }
+
+        .kpi-icon {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+    </style>
 </head>
+
 <body>
 
     {% include "pay/navigation/admin_nav.html" %}
 
-<!-- Manager Dashboard Hero -->
-<div class="container mt-6 pt-5">
-    <div class="text-center py-4">
-        <h2 class="display-5 text-muted fw-bold" style="color: #CFD8DC;">
-            Welcome <span style="color: #D7CCC8;">{{ user.first_name }} {{ user.last_name }}</span>, 
-            {% if user.groups.all.0.name %}{{ user.groups.all.0.name }}{% endif %}
-        </h2>
-        <h4 class="text-muted" style="color: #CFD8DC;">Here's what's happening in the store today</h4>
+    <!-- Manager Dashboard -->
+    <div class="container py-5">
+        <div class="text-center mb-5">
+            <h2 class="display-5">
+                Welcome <span class="gradient-text">{{ user.first_name }} {{ user.last_name }}</span>,
+                {% if user.groups.all.0.name %}{{ user.groups.all.0.name }}{% endif %}
+            </h2>
+            <h4 class="text-secondary">Here's what's happening in the store today</h4>
+        </div>
+
+        <!-- KPI Cards -->
+        <div class="row g-4 text-center">
+            <div class="col-md-3">
+                <div class="card p-4">
+                    <i class="bi bi-currency-dollar text-success kpi-icon"></i>
+                    <h5>Sales Today</h5>
+                    <p class="fs-4 fw-bold">M{{ sales_today|floatformat:2 }}</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card p-4">
+                    <i class="bi bi-cart-check text-primary kpi-icon"></i>
+                    <h5>Active Orders</h5>
+                    <p class="fs-4 fw-bold">23</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card p-4">
+                    <i class="bi bi-exclamation-triangle text-warning kpi-icon"></i>
+                    <h5>Low Stock</h5>
+                    <p class="fs-5 fw-bold">{{ total_attention_items }} Items</p>
+                    <small class="text-danger">{{ out_of_stock_count }} Out of Stock</small><br>
+                    <small class="text-warning">{{ low_stock_count }} Low Stock</small>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card p-4">
+                    <i class="bi bi-bar-chart-fill text-info kpi-icon"></i>
+                    <h5>Monthly Revenue</h5>
+                    <p class="fs-4 fw-bold">M{{ monthly_revenue|floatformat:2 }}</p>
+
+                    {% if week_change_percentage > 0 %}
+                        <p class="text-success fw-semibold"><i class="bi bi-arrow-up-right"></i> {{ week_change_percentage|floatformat:1 }}% up</p>
+                    {% elif week_change_percentage < 0 %}
+                        <p class="text-danger fw-semibold"><i class="bi bi-arrow-down-right"></i> {{ week_change_percentage|floatformat:1 }}% down from last week</p>
+                    {% else %}
+                        <p class="text-muted fw-semibold"><i class="bi bi-arrow-right"></i> No change</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Product Ratings Insights -->
+        <div class="mt-5">
+            <h4 class="section-title">Product Ratings Insights</h4>
+            <div class="row g-4 text-center">
+                <div class="col-md-4">
+                    <div class="card p-4 bg-light">
+                        <i class="bi bi-star-fill text-warning kpi-icon"></i>
+                        <h6>Most Rated Product</h6>
+                        <p class="fw-semibold">{{ most_rated_product.name }}</p>
+                        <small>{{ most_rated_product.count }} ratings</small>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card p-4 bg-light">
+                        <i class="bi bi-star-half text-muted kpi-icon"></i>
+                        <h6>Least Rated Product</h6>
+                        <p class="fw-semibold">{{ least_rated_product.name }}</p>
+                        <small>{{ least_rated_product.count }} ratings</small>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card p-4 bg-light">
+                        <i class="bi bi-star text-success kpi-icon"></i>
+                        <h6>Most 5-Star Ratings</h6>
+                        <p class="fw-semibold">{{ most_five_star_product.name }}</p>
+                        <small>{{ most_five_star_product.count }} 5-stars</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sales Chart -->
+        <div class="mt-5">
+            <h4 class="section-title">Sales Performance</h4>
+            <div class="bg-light border rounded-4 p-4" style="height: 450px;">
+                <canvas id="revenueChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="text-center my-5">
+            <a href="#" class="btn btn-custom m-2"><i class="bi bi-plus-circle"></i> Add Product</a>
+            <a href="#" class="btn btn-custom m-2"><i class="bi bi-person-lines-fill"></i> Customer List</a>
+            <a href="#" class="btn btn-custom m-2"><i class="bi bi-clock-history"></i> Order History</a>
+        </div>
     </div>
-    
 
-    <!-- KPI Cards -->
-    <div class="row text-center g-4">
-        <div class="col-md-3">
-            <div class="card shadow-sm border-0 p-3" style="background-color: #CFD8DC;">
-                <i class="bi bi-currency-dollar fs-1 text-success"></i>
-                <h5 class="mt-3">Sales Today</h5>
-                <p class="fs-4 fw-bold">M4,250</p>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card shadow-sm border-0 p-3" style="background-color: #CFD8DC;">
-                <i class="bi bi-cart-check fs-1 text-primary"></i>
-                <h5 class="mt-3">Active Orders</h5>
-                <p class="fs-4 fw-bold">23</p>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card shadow-sm border-0 p-3" style="background-color: #CFD8DC;">
-                <i class="bi bi-exclamation-triangle fs-1 text-warning"></i>
-                <h5 class="fs-2 mt-3">Low Stock</h5>
-                <p class="fs-4 fw-bold">{{ total_attention_items }} Items</p>
-                <p class="fs-6 fw-semibold text-danger">{{ out_of_stock_count }} Out of Stock</p>
-                <p class="fs-6 fw-semibold text-warning">{{ low_stock_count }} Low Stock</p>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card shadow-sm border-0 p-3" style="background-color: #CFD8DC;">
-                <i class="bi bi-bar-chart-fill fs-1 text-info"></i>
-                <h5 class="mt-3">Monthly Revenue</h5>
-                <p class="fs-4 fw-bold">M45,800</p>
-            </div>
-        </div>
-    </div>
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            document.body.classList.add('loaded');
+        });
 
-    <!-- Product Ratings Analytics -->
-<div class="mt-5">
-    <h4 class="text-secondary">Product Ratings Insights</h4>
-    <div class="row text-center g-4 mt-3">
-        <div class="col-md-4">
-            <div class="card shadow-sm border-0 p-3 bg-light">
-                <i class="bi bi-star-fill fs-2 text-warning"></i>
-                <h6 class="mt-2">Most Rated Product</h6>
-                <p class="fw-semibold">{{ most_rated_product.name }}</p>
-                <p>{{ most_rated_product.count }} total ratings</p>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card shadow-sm border-0 p-3 bg-light">
-                <i class="bi bi-star-half fs-2 text-muted"></i>
-                <h6 class="mt-2">Least Rated Product</h6>
-                <p class="fw-semibold">{{ least_rated_product.name }}</p>
-                <p>{{ least_rated_product.count }} total ratings</p>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card shadow-sm border-0 p-3 bg-light">
-                <i class="bi bi-star fs-2 text-success"></i>
-                <h6 class="mt-2">Most 5-Star Ratings</h6>
-                <p class="fw-semibold">{{ most_five_star_product.name }}</p>
-                <p>{{ most_five_star_product.count }} 5-star ratings</p>
-            </div>
-        </div>
-    </div>
-</div>
+        const ctx = document.getElementById('revenueChart').getContext('2d');
+        const revenueChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: {{ labels|safe }},
+                datasets: [{
+                    label: 'Revenue (M)',
+                    data: {{ data|safe }},
+                    backgroundColor: 'rgba(33, 203, 243, 0.1)',
+                    borderColor: 'rgba(33, 203, 243, 1)',
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.5,
+                    pointBackgroundColor: '#21CBF3',
+                    pointBorderColor: '#fff',
+                    pointRadius: 5,
+                    pointHoverRadius: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        labels: {
+                            font: { family: 'Poppins' }
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: '#000',
+                        borderColor: '#21CBF3',
+                        borderWidth: 1
+                    }
+                },
+                scales: {
+                    x: { grid: { display: false } },
+                    y: { grid: { color: 'rgba(0,0,0,0.05)' }, beginAtZero: true }
+                }
+            }
+        });
+    </script>
 
-
-    <!-- Sales Graph Placeholder -->
-    <div class="mt-5">
-        <h4 class="text-secondary">Sales Performance</h4>
-        <div class="bg-light border rounded p-5 text-center text-muted">
-            <i class="bi bi-graph-up-arrow fs-1"></i>
-            <p class="mt-3">Sales graph will appear here (integrate chart.js or analytics APIs)</p>
-        </div>
-    </div>
-
-    <!-- Quick Action Buttons -->
-    <div class="mt-5 text-center">
-        <a href="#" class="btn btn-outline-danger m-2"><i class="bi bi-plus-circle"></i> Add New Product</a>
-        <a href="#" class="btn btn-outline-primary m-2"><i class="bi bi-person-lines-fill"></i> Customer List</a>
-        <a href="#" class="btn btn-outline-secondary m-2"><i class="bi bi-clock-history"></i> Order History</a>
-    </div>
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

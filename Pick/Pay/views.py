@@ -21,6 +21,8 @@ from django.db.models import Avg
 from django.db.models.functions import TruncDay
 from django.db.models.functions import TruncDate
 from django.contrib.auth import get_user_model
+from django.utils import timezone
+from datetime import timedelta
 
 from .models import Product
 from .models import Profile
@@ -141,6 +143,75 @@ def admin_dashboard(request):
             return "Unknown Product"
 
 
+    # Revenue grouped by day for successful transactions
+    revenue_data = (
+        Transaction.objects.filter(status='success')
+        .annotate(day=TruncDate('created_at'))
+        .values('day')
+        .annotate(total_revenue=Sum('total_amount'))
+        .order_by('day')
+    )
+
+    # Prepare for Chart.js
+    labels = [entry['day'].strftime('%Y-%m-%d') for entry in revenue_data]
+    data = [float(entry['total_revenue']) for entry in revenue_data]
+
+    
+    today = now().date()
+    current_month = today.month
+    current_year = today.year
+    current_week_start = today - timedelta(days=today.weekday())  # Monday
+    last_week_start = current_week_start - timedelta(days=7)
+    last_week_end = current_week_start - timedelta(days=1)
+
+
+    # Sum of successful transactions made today
+    sales_today = (
+        Transaction.objects.filter(status='success', created_at__date=today)
+        .aggregate(total=Sum('total_amount'))
+        .get('total') or 0
+    )
+
+    
+    # Monthly Revenue
+    monthly_revenue = (
+        Transaction.objects.filter(
+            status='success',
+            created_at__year=current_year,
+            created_at__month=current_month
+        )
+        .aggregate(total=Sum('total_amount'))
+        .get('total') or 0
+    )
+
+        # Weekly comparison
+    this_week_revenue = (
+        Transaction.objects.filter(
+            status='success',
+            created_at__date__gte=current_week_start,
+            created_at__date__lte=today
+        )
+        .aggregate(total=Sum('total_amount'))
+        .get('total') or 0
+    )
+
+    last_week_revenue = (
+        Transaction.objects.filter(
+            status='success',
+            created_at__date__gte=last_week_start,
+            created_at__date__lte=last_week_end
+        )
+        .aggregate(total=Sum('total_amount'))
+        .get('total') or 0
+    )
+
+    # Calculate Percentage Change (Avoid division by zero)
+    if last_week_revenue:
+        week_change_percentage = ((this_week_revenue - last_week_revenue) / last_week_revenue) * 100
+    else:
+        week_change_percentage = 0
+
+
     context = {
         "low_stock_count": low_stock_count,
         "out_of_stock_count": out_of_stock_count,
@@ -157,7 +228,14 @@ def admin_dashboard(request):
         "most_five_star_product": {
             "name": get_product_name(most_five_star[0]),
             "count": most_five_star[1]
-        }
+        },
+        'sales_today': sales_today,
+        'monthly_revenue': monthly_revenue,
+        'this_week_revenue': this_week_revenue,
+        'last_week_revenue': last_week_revenue,
+        'week_change_percentage': week_change_percentage,
+        'labels': [entry['day'].strftime('%Y-%m-%d') for entry in revenue_data],
+        'data': [float(entry['total_revenue']) for entry in revenue_data],
     }
 
     return render(request, 'pay/managers/dashboard.html', context)
@@ -510,15 +588,15 @@ def baby(request):
         grouped_appliances.setdefault(subcat, []).append(product)
 
     # Prepare data for rendering
-    appliance_sections = []
+    baby_sections = []
     for subcategory_name, products in grouped_appliances.items():
-        appliance_sections.append({
+        baby_sections.append({
             'name': subcategory_name,
             'products': products
         })
 
     context = {
-        'appliance_sections': appliance_sections
+        'baby_sections': baby_sections
     }
 
     return render(request, 'pay/products/baby.html', context)
@@ -661,8 +739,17 @@ def process_payment(request):
         cart_data = []
         total = 0
         for item in cart_items:
+            product = item.product_id
             item_total = item.product_id.price * item.quantity
             total += item_total
+
+            # Decrease the product stock
+            if product.stock >= item.quantity:
+                product.stock -= item.quantity
+                product.save()
+            else:
+                return JsonResponse({'success': False, 'error': f'Not enough stock for {product.name}'})
+
             cart_data.append({
                 'product_id': item.product_id.product_id,
                 'product_name': item.product_id.name,
@@ -843,32 +930,53 @@ def make_payment(request):
 
 
 def process_payment(request):
+    user = request.user
+
     if request.method == 'POST':
         payment_method = request.POST.get('payment_method')
 
-        # Retrieve the cart and total_amount from session or localStorage
-        cart = request.session.get('cart', [])
-        total_amount = sum(item['price'] * item['quantity'] for item in cart)
+        try:
+            cart = Cart.objects.get(customer_id=user)
+            cart_items = cart.items.all()
 
-        # Create the transaction
-        transaction = Transaction.objects.create(
-            user=request.user,
-            cart_snapshot=cart,
-            total_amount=total_amount,
-            status='pending',
-            payment_method=payment_method
-        )
+            if not cart_items.exists():
+                # No items to pay for
+                return redirect('cart_history')
 
-        # Here, simulate payment processing, or integrate with real payment gateway
+            # Prepare cart snapshot
+            cart_snapshot = []
+            total = 0
+            for item in cart_items:
+                item_total = item.product_id.price * item.quantity
+                cart_snapshot.append({
+                    'product_name': item.product_id.name,
+                    'price': float(item.product_id.price),
+                    'quantity': item.quantity,
+                    'total': float(item_total),
+                })
+                total += item_total
 
-        # Update transaction status based on payment success (for now, we simulate 'success')
-        transaction.status = 'success'
-        transaction.save()
+            # Create the transaction
+            transaction = Transaction.objects.create(
+                user=user,
+                cart_snapshot=cart_snapshot,
+                total_amount=total,
+                status='success',  # assuming payment is successful here
+                payment_method=payment_method,
+                created_at=timezone.now()
+            )
 
-        # Redirect to success page
-        return redirect('transaction_success', reference=transaction.reference)
+            # After successful payment, delete the cart
+            cart.delete()
 
-    return JsonResponse({'success': False, 'message': 'Invalid payment request'})
+            # Redirect to success page
+            return redirect('guest_transaction_success', reference=transaction.reference)
+
+        except Cart.DoesNotExist:
+            # Cart not found
+            return redirect('cart_history')
+
+    return redirect('make_payment')  # fallback if GET request
 
 
 
@@ -878,3 +986,23 @@ def guest_transaction_success(request, reference):
     transaction = get_object_or_404(Transaction, reference=reference)
     
     return render(request, 'pay/guest_customer/transaction_success.html', {'transaction': transaction})
+
+
+
+
+@login_required
+def delete_cart_item_again(request, product_id):
+    user = request.user
+    try:
+        cart = Cart.objects.get(customer_id=user)
+        item = cart.items.get(product_id__product_id=product_id)
+        
+        if item.quantity > 1:
+            item.quantity -= 1
+            item.save()
+        else:
+            item.delete()
+    except (Cart.DoesNotExist, CartItem.DoesNotExist):
+        pass
+
+    return redirect('cart_history')

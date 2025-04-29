@@ -1,53 +1,53 @@
 {% load static %}
 
-
 <link rel="stylesheet" href="{% static 'stylesheet/nav.css' %}">
 
-<nav class="navbar navbar-expand-lg navbar-light bg-light">
-    <a class="navbar-brand" style="margin-right: 220px;">
-        <img src="{% static 'images/logo.png' %}" alt="Pick n Pay Lesotho Logo" width="150">
-    </a>
-    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav"
-        aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-    </button>
-    <div class="collapse navbar-collapse" id="navbarNav">
-        <ul class="navbar-nav ms-auto me-3">
+<nav class="navbar navbar-expand-lg bg-white shadow-sm">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="#">
+            <img src="{% static 'images/logo.png' %}" alt="Pick n Pay Lesotho Logo" width="140" class="d-inline-block align-text-top">
+        </a>
+        <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+            aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        
+        <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+            <ul class="navbar-nav align-items-center gap-3">
 
-            <li class="nav-item">
-                <a class="nav-link" href="{% url 'admin_dashboard' %}">Dashboard</a>
-            </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'admin_dashboard' %}">Dashboard</a>
+                </li>
 
-            {% if user.groups.all.0.name == 'Inventory Manager' or user.groups.all.0.name == 'Operations Manager' %}
-            <li class="nav-item">
-                <a class="nav-link" href="{% url 'product_management' %}">Manage Products</a>
-            </li>
-            {% endif %}
+                {% if user.groups.all.0.name == 'Inventory Manager' or user.groups.all.0.name == 'Operations Manager' %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'product_management' %}">Manage Products</a>
+                    </li>
+                {% endif %}
 
-            {% if user.groups.all.0.name == 'Store Manager' or user.groups.all.0.name == 'Operations Manager' %}
-            <li class="nav-item">
-                <a class="nav-link" href="#">Manage Customers</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="#">Order Management</a>
-            </li>
-            {% endif %}
+                {% if user.groups.all.0.name == 'Store Manager' or user.groups.all.0.name == 'Operations Manager' %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Manage Customers</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Order Management</a>
+                    </li>
+                {% endif %}
 
-            {% if user.groups.all.0.name == 'Operations Manager' %}
-            <li class="nav-item">
-                <a class="nav-link" href="{% url 'sales_report' %}">Sales Reports</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="{% url 'all_transactions' %}">Payment Transactions</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="#">Site Settings</a>
-            </li>
-            {% endif %}
+                {% if user.groups.all.0.name == 'Operations Manager' %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'sales_report' %}">Sales Reports</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'all_transactions' %}">Payment Transactions</a>
+                    </li>
+                {% endif %}
 
-            <li class="nav-item">
-                <a class="nav-link text-danger" href="{% url 'admin_logout' %}">Logout</a>
-            </li>
-        </ul>
+                <li class="nav-item">
+                    <a class="nav-link btn btn-sm btn-outline-danger ms-2" href="{% url 'admin_logout' %}">Logout</a>
+                </li>
+
+            </ul>
+        </div>
     </div>
 </nav>

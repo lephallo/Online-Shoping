@@ -4,11 +4,15 @@
 <head>
     <meta charset="UTF-8">
     <title>Homeware | Pick n Pay</title>
-    <link rel="stylesheet" href="{% static 'stylesheet/style.css' %}">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+
+
     <style>
         body {
             background-color: #f2f2f2;
+            font-family: 'Outfit', sans-serif;
         }
 
         .subcategory-title {
@@ -109,7 +113,6 @@
     {% include "pay/navigation/customer_nav.html" %}
 
     <div class="container mt-6 pt-5">
-
         <h2 class="mb-6">🛒 Homeware</h2>
     
         {% for section in homeware_sections %}
@@ -125,22 +128,269 @@
                             <div class="info-box">
                                 <div class="product-name">{{ product.name }}</div>
                                 <div class="price">M{{ product.price }}</div>
+
+                                <!-- ⭐ Star Rating Form -->
+                                <form class="rating-form" method="post" data-product-id="{{ product.product_id }}">
+                                    {% csrf_token %}
+                                    <div class="review-stars text-warning mb-2">
+                                        <div class="review-stars text-warning mb-2" data-product-id="{{ product.product_id }}">
+                                            {% for star in "12345" %}
+                                                <button type="button" class="star-button" data-star="{{ star }}" style="background: none; border: none;">
+                                                    <i class="bi bi-star me-1"></i>
+                                                </button>
+                                            {% endfor %}
+                                        </div>
+                                        
+                                    </div>
+                                </form>
+
                             </div>
                         </div>
-                        <form action="#" method="post" class="card-bottom">
+                        <form method="post" class="card-bottom" id="addToCartForm">
                             {% csrf_token %}
-                            <button type="submit" class="add-to-cart-btn">Add to Cart</button>
-                        </form>
+                            <input type="hidden" name="product_id" value="{{ product.product_id }}">
+                            <button type="button" class="add-to-cart-btn" data-product-id="{{ product.product_id }}">Add to Cart</button>
+                        </form>                        
                     </div>
                 </div>
                 {% endfor %}
             </div>
             {% else %}
-            <p class="text-muted">No products Homeware products available.</p>
+            <p class="text-muted">No products found in this subcategory.</p>
             {% endif %}
         {% endfor %}
     
     </div>
+
+
+
+
+    <!-- Cart Modal -->
+    <div class="modal fade" id="cartModal" tabindex="-1" aria-labelledby="cartModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header" style="background-color: #CFD8DC; color: #ffffff;">
+                    <h5 class="modal-title" id="cartModalLabel">Product Added to Cart</h5>
+                </div>
+                <div class="modal-body"  style="background-color: #EFEBE9;">
+                    <div id="cart-items-list">
+                        <!-- Cart items will be injected here by JavaScript -->
+                    </div>
+                    <h2>Total Amount: M<span id="modal-total-price">0</span></h2>
+                </div>
+                <div class="modal-footer" style="background-color: #CFD8DC; color: #ffffff;">
+                    <button type="button" class="btn" id="pay-now-btn" style="background-color: #78909C; color: #ffffff">Make Payment</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+
+ 
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('.add-to-cart-btn').click(function(e) {
+                e.preventDefault();
+                const button = $(this);
+                const productId = button.data('product-id');  // Use the data-attribute directly
+            
+                $.ajax({
+                    url: '{% url "add_to_cart" %}',
+                    method: 'POST',
+                    data: {
+                        product_id: productId,
+                        quantity: 1,
+                        csrfmiddlewaretoken: '{{ csrf_token }}'
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            // Update Cart Modal with the new cart items
+                            let cartItemsHtml = '';
+                            response.cart_items.forEach(item => {
+                                cartItemsHtml += `
+                                    <div class="cart-item d-flex justify-content-between align-items-center">
+                                        <div class="cart-item-details">
+                                            <div class="fw-bold">${item.name}</div>
+                                            <div>Price: M${item.price} x ${item.quantity}</div>
+                                            <div>Total: M${item.total_price}</div>
+                                        </div>
+                                        <button class="btn btn-danger delete-item-btn" data-product-id="${item.product_id}">Delete</button>
+                                    </div>
+                                    <hr>
+                                `;
+                            });
+        
+                            // Inject cart items and total price into the modal
+                            $('#cart-items-list').html(cartItemsHtml);
+                            $('#modal-total-price').text(response.total_price);
+        
+                            const modal = new bootstrap.Modal(document.getElementById('cartModal'));
+                            modal.show();
+        
+                            // Update the Cart nav-link item count
+                            $('#cart-count').text(response.total_items);  // Update cart item count
+                        }
+                    },
+                    error: function(err) {
+                        alert("Something went wrong while adding to cart.");
+                    }
+                });
+            });
+        
+            // Handle item deletion
+            $(document).on('click', '.delete-item-btn', function() {
+                const button = $(this);
+                const productId = button.data('product-id');
+                
+                $.ajax({
+                    url: '{% url "remove_from_cart" %}',  // Define this view to handle item removal
+                    method: 'POST',
+                    data: {
+                        product_id: productId,
+                        csrfmiddlewaretoken: '{{ csrf_token }}'
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            // Re-render cart modal with updated items
+                            $('#cart-items-list').html('');
+                            response.cart_items.forEach(item => {
+                                $('#cart-items-list').append(`
+                                    <div class="cart-item d-flex justify-content-between align-items-center">
+                                        <div class="cart-item-details">
+                                            <div>${item.name}</div>
+                                            <div>Price: M${item.price} x ${item.quantity}</div>
+                                            <div>Total: M${item.total_price}</div>
+                                        </div>
+                                        <button class="btn btn-danger delete-item-btn" data-product-id="${item.product_id}">Delete</button>
+                                    </div>
+                                    <hr>
+                                `);
+                            });
+        
+                            $('#modal-total-price').text(response.total_price);
+                        }
+                    },
+                    error: function(err) {
+                        alert("Something went wrong while removing item from cart.");
+                    }
+                });
+            });
+        });
+    </script>
+    
+    <script>
+        // Fill stars visually on click
+        $(document).on('click', '.star-button', function() {
+            const clickedStar = parseInt($(this).data('star'));
+            const container = $(this).closest('.review-stars');
+            const productId = container.data('product-id');
+    
+            // Update stars
+            container.find('.star-button').each(function(index) {
+                const icon = $(this).find('i');
+                if (index < clickedStar) {
+                    icon.removeClass('bi-star').addClass('bi-star-fill');
+                } else {
+                    icon.removeClass('bi-star-fill').addClass('bi-star');
+                }
+            });
+    
+            // Optional: Send AJAX after star selection
+            $.ajax({
+                url: "{% url 'submit_rating' %}",
+                method: "POST",
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                contentType: "application/json",
+                data: JSON.stringify({
+                    product_id: productId,
+                    rating: clickedStar
+                }),
+                success: function(response) {
+                    if (response.success) {
+                        alert("Thanks for your rating!");
+                    } else {
+                        alert("Rating failed: " + response.error);
+                    }
+                },
+                error: function(err) {
+                    alert("Something went wrong.");
+                }
+            });
+        });
+    </script>
+
+    <!--Saving activity logs to mongodb-->
+    <script>
+        function logActivity(action, productId = null) {
+            fetch("{% url 'log_activity' %}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": "{{ csrf_token }}"
+                },
+                body: JSON.stringify({
+                    action: action,
+                    product_id: productId,
+                    page_url: window.location.href
+                })
+            });
+        }
+    
+        // Log product views
+        $(document).ready(function() {
+            $('.product-card').each(function() {
+                const productId = $(this).find('.add-to-cart-btn').data('product-id');
+                logActivity('view_product', productId);
+            });
+    
+            // Log clicks on Add to Cart
+            $('.add-to-cart-btn').click(function() {
+                const productId = $(this).data('product-id');
+                logActivity('click_add_to_cart', productId);
+            });
+    
+            // Log star clicks
+            $('.star-button').click(function() {
+                const productId = $(this).closest('.review-stars').data('product-id');
+                logActivity('click_rating_star', productId);
+            });
+        });
+    </script>
+
+
+
+<script>
+document.getElementById("pay-now-btn").addEventListener("click", function() {
+    fetch("{% url 'process_payment' %}", {
+        method: "POST",
+        headers: {
+            "X-CSRFToken": "{{ csrf_token }}",
+            "Content-Type": "application/json"
+        },
+        credentials: "same-origin",
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert("Payment successful! Transaction ID: " + data.transaction_id);
+            window.location.reload();  // or redirect to a success page
+        } else {
+            alert("Payment failed: " + data.error);
+        }
+    })
+    .catch(error => {
+        alert("Something went wrong!");
+        console.error(error);
+    });
+});
+</script>
+
+    
+            
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>

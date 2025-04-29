@@ -24,16 +24,16 @@ urlpatterns = [
     path('remove_from_cart/', views.remove_from_cart, name='remove_from_cart'),
     path('cart/reduce/', views.reduce_cart_item_quantity, name='reduce_cart_item'),
     path('process-payment/', views.process_payment, name='process_payment'),
-    path('cart-history/', views.cart_history, name='cart_history'),
+    path('cart/history/', views.cart_history, name='cart_history'),
     path('payment-success/<uuid:transaction_id>/', views.payment_success, name="payment_success"),
     path('submit-rating/', views.submit_rating, name='submit_rating'),
     path('log-activity/', views.log_activity_view, name='log_activity'),
     path('log-activity/', views.log_user_activity, name='log_user_activity'),
     path('guest-orders', views.guest_orders_page, name="guest_orders"),
 
-    path('make-payment/', views.make_payment, name='make_payment'),
-    path('process-payment/', views.process_payment, name='process_payment'),
-    path('transaction-success/<reference>/', views.guest_transaction_success, name='transaction_success'),
+    path('cart/pay/', views.make_payment, name='make_payment'),
+    path('cart/process-payment/', views.process_payment, name='process_payment'),
+    path('cart/success/<str:reference>/', views.guest_transaction_success, name='guest_transaction_success'),
 
     path('groceries-at-pick-and-pay', views.groceries, name="groceries"),
     path('baby-products', views.baby, name="baby"),
@@ -45,4 +45,7 @@ urlpatterns = [
     path('product-management', views.product_management, name="product_management"),
     path('view-all-transactions', views.all_transactions_view, name='all_transactions'),
     path('sales-report', views.sales_report_view, name="sales_report"),
+
+    path('delete-cart-item/<int:product_id>/', views.delete_cart_item_again, name='delete_cart_item_again'),
+
 ]
