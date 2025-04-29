@@ -46,7 +46,7 @@
         h2.display-5 {
             font-weight: 700;
             color: #263238;
-            font-family: 'Poppins', sans-serif;
+            font-family: 'Outfit', sans-serif;
         }
 
         h4.text-secondary {
@@ -61,18 +61,18 @@
             font-size: 16px;
             transition: all 0.3s ease;
             border: none;
-            background: linear-gradient(135deg, #2196F3, #21CBF3);
+            background: linear-gradient(135deg, #FF3D00, #FFFFFF);
             color: white;
         }
 
         .btn-custom:hover {
-            background: linear-gradient(135deg, #21CBF3, #2196F3);
+            background: linear-gradient(135deg, #FF3D00, #FFFFFF);
             transform: translateY(-3px);
             box-shadow: 0 6px 20px rgba(33, 203, 243, 0.4);
         }
 
         .gradient-text {
-            background: linear-gradient(to right, #2196F3, #21CBF3);
+            background: linear-gradient(to right,  #FF3D00, #FFFFFF);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
@@ -109,21 +109,21 @@
         <div class="row g-4 text-center">
             <div class="col-md-3">
                 <div class="card p-4">
-                    <i class="bi bi-currency-dollar text-success kpi-icon"></i>
+                    <i class="bi bi-currency-dollar text-danger kpi-icon"></i>
                     <h5>Sales Today</h5>
                     <p class="fs-4 fw-bold">M{{ sales_today|floatformat:2 }}</p>
                 </div>
             </div>
             <div class="col-md-3">
                 <div class="card p-4">
-                    <i class="bi bi-cart-check text-primary kpi-icon"></i>
+                    <i class="bi bi-cart-check text-danger kpi-icon"></i>
                     <h5>Active Orders</h5>
                     <p class="fs-4 fw-bold">23</p>
                 </div>
             </div>
             <div class="col-md-3">
                 <div class="card p-4">
-                    <i class="bi bi-exclamation-triangle text-warning kpi-icon"></i>
+                    <i class="bi bi-exclamation-triangle text-danger kpi-icon"></i>
                     <h5>Low Stock</h5>
                     <p class="fs-5 fw-bold">{{ total_attention_items }} Items</p>
                     <small class="text-danger">{{ out_of_stock_count }} Out of Stock</small><br>
@@ -132,7 +132,7 @@
             </div>
             <div class="col-md-3">
                 <div class="card p-4">
-                    <i class="bi bi-bar-chart-fill text-info kpi-icon"></i>
+                    <i class="bi bi-bar-chart-fill text-dander kpi-icon"></i>
                     <h5>Monthly Revenue</h5>
                     <p class="fs-4 fw-bold">M{{ monthly_revenue|floatformat:2 }}</p>
 
@@ -211,11 +211,11 @@
                     label: 'Revenue (M)',
                     data: {{ data|safe }},
                     backgroundColor: 'rgba(33, 203, 243, 0.1)',
-                    borderColor: 'rgba(33, 203, 243, 1)',
+                    borderColor: 'rgba(255, 0, 0, 1)',
                     borderWidth: 3,
                     fill: true,
                     tension: 0.5,
-                    pointBackgroundColor: '#21CBF3',
+                    pointBackgroundColor: 'rgba(255, 0, 0, 1)',
                     pointBorderColor: '#fff',
                     pointRadius: 5,
                     pointHoverRadius: 8
