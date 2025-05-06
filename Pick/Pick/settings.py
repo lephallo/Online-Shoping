@@ -31,7 +31,8 @@ SECRET_KEY = 'django-insecure-*$sw$*aj-x^ste1fj1jcx^60mt=y6f-36bhbh2k0uz5shszohc
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+
+ALLOWED_HOSTS = os.getenv('RENDER_EXTERNAL_HOSTNAME', '127.0.0.1').split(',')
 
 
 # Application definition
@@ -48,6 +49,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -85,6 +87,8 @@ WSGI_APPLICATION = 'Pick.wsgi.application'
 
 # Replace the DATABASES section of your settings.py with this
 tmpPostgres = urlparse(os.getenv("DATABASE_URL"))
+
+
 
 DATABASES = {
     'default': {
@@ -132,6 +136,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = 'static/'
+STATIC_ROOT = BASE_DIR / 'static'
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'

@@ -148,3 +148,65 @@ class Transaction(models.Model):
     def __str__(self):
         return f"{self.transaction_id} - {self.user.username} - {self.status} - {self.payment_method or 'N/A'}"
 
+
+
+
+
+class AnonCart(models.Model):
+    cart_id = models.AutoField(primary_key=True)
+    session_key = models.CharField(max_length=100, db_index=True)  # Can store UUID or Django session key
+    created_at = models.DateTimeField(default=now)
+
+    def __str__(self):
+        return f"AnonCart {self.cart_id} for session {self.session_key}"
+
+    def total_items(self):
+        return sum(item.quantity for item in self.items.all())
+
+    def total_price(self):
+        return sum(item.product_id.price * item.quantity for item in self.items.all())
+
+
+class AnonCartItem(models.Model):
+    cart_item_id = models.AutoField(primary_key=True)
+    cart_id = models.ForeignKey(AnonCart, on_delete=models.CASCADE, related_name='items')
+    product_id = models.ForeignKey(Product, on_delete=models.CASCADE)
+    quantity = models.PositiveIntegerField(default=1)
+
+    def __str__(self):
+        return f"{self.quantity} × {self.product_id.name} (Anon)"
+
+
+class AnonTransaction(models.Model):
+    STATUS_CHOICES = [
+        ('success', 'Success'),
+        ('failed', 'Failed'),
+        ('pending', 'Pending'),
+    ]
+
+    PAYMENT_METHOD_CHOICES = [
+        ('Credit Card', 'Credit Card'),
+        ('Debit Card', 'Debit Card'),
+        ('Mpesa', 'Mpesa'),
+        ('EcoCash', 'EcoCash'),
+        ('C-Pay', 'C-Pay'),
+        ('PayPal', 'PayPal'),
+        ('Crypto', 'Crypto'),
+    ]
+
+    transaction_id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+    session_key = models.CharField(max_length=100, db_index=True)
+    cart_snapshot = models.JSONField()  # Stores what was in the cart at purchase time
+    total_amount = models.DecimalField(max_digits=10, decimal_places=2)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    payment_method = models.CharField(max_length=30, choices=PAYMENT_METHOD_CHOICES, null=True, blank=True)
+    created_at = models.DateTimeField(default=now)
+    reference = models.CharField(max_length=100, unique=True, blank=True)
+
+    def save(self, *args, **kwargs):
+        if not self.reference:
+            self.reference = str(uuid.uuid4())[:12].replace('-', '')
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.transaction_id} - session {self.session_key} - {self.status}"

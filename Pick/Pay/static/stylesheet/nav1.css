@@ -1,6 +1,7 @@
 /* General Navbar Styling */
 .navbar {
-    background-color: #f8f9fa; /* Light background for the navbar */
+    background-color: transparent !important;
+    box-shadow: none; /* Optional: removes shadow if present */
     padding: 10px 20px;
     position: fixed; /* Fix the navbar to the top */
     top: 0;
@@ -8,7 +9,6 @@
     right: 0;
     z-index: 1000; /* Ensure navbar stays above other content */
     width: 100%; /* Full-width navbar */
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Optional: subtle shadow for navbar */
 }
 
 /* Add padding to body content to prevent overlap with fixed navbar */
@@ -19,7 +19,6 @@ body {
 /* Navbar Brand (Logo) */
 .navbar-brand {
     font-size: 1.5rem;
-    color: #00B140 !important;
     font-weight: bold;
     display: flex;
     align-items: center;

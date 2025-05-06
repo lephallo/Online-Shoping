@@ -40,3 +40,5 @@ def log_activity(user_id, username, action, product_id=None, page_url=None):
         "page_url": page_url,
         "timestamp": datetime.utcnow()
     })
+
+

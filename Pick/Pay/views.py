@@ -24,11 +24,16 @@ from django.contrib.auth import get_user_model
 from django.utils import timezone
 from datetime import timedelta
 
+
 from .models import Product
 from .models import Profile
 from .models import Cart
 from .models import CartItem
 from .models import Transaction
+from .models import AnonTransaction
+from .models import AnonCart
+from .models import AnonCartItem
+from .models import AnonTransaction
 
 from .mongo import save_rating
 from .mongo import log_activity 
@@ -297,7 +302,8 @@ def login_view(request):
                 login(request, user)
                 return redirect('customer_dashboard')
             else:
-                return redirect('customer_login')  # or reload login page with error
+                # return redirect('customer_login')  # or reload login page with error
+                message("You dont belong to this group")
     else:
         form = LoginForm()
     return render(request, 'pay/auth/cus_login.html', {'form': form})
@@ -317,20 +323,53 @@ def admin_logout_view(request):
 
 
 
+
 @login_required(login_url='login')  
 def customer_dashboard(request):
-    if not is_customer(request.user):
+
+    # Check if the user belongs to the 'Customer' group
+    if not request.user.groups.filter(name='Customer').exists():
         messages.error(request, "Access denied: You do not belong to the Customer group.")
         return redirect('login') 
 
+    # Featured products for the customer
     featured_products = Product.objects.filter(is_featured=True).order_by('-created_at')[:4]
+
+    # Transaction Analytics
+    transactions = Transaction.objects.filter(user=request.user)
+
+    transaction_count = transactions.count()
+    total_spent = transactions.filter(status='success').aggregate(Sum('total_amount'))['total_amount__sum'] or 0
+    avg_spent = transactions.filter(status='success').aggregate(Avg('total_amount'))['total_amount__avg'] or 0
+
+    # Most used payment method
+    method_counts = transactions.values('payment_method').annotate(count=Count('payment_method')).order_by('-count')
+    preferred_method = method_counts[0]['payment_method'] if method_counts else "N/A"
+
+    # Analyze frequent items from cart_snapshots
+    item_counter = Counter()
+    for tx in transactions:
+        snapshot = tx.cart_snapshot
+        if isinstance(snapshot, list):  # ensure it's a list
+            for item in snapshot:
+                if isinstance(item, dict):
+                    item_name = item.get('name')
+                    if item_name:
+                        item_counter[item_name] += 1
+    frequent_items = [item for item, count in item_counter.most_common(3)]
 
     context = {
         'featured_products': featured_products,
-        'user': request.user
+        'user': request.user,
+        'transaction_count': transaction_count,
+        'total_spent': total_spent,
+        'avg_spent': avg_spent,
+        'preferred_method': preferred_method,
+        'frequent_items': frequent_items,
     }
 
-    return render(request, 'pay/customer/dashboard.html', context) 
+    return render(request, 'pay/customer/dashboard.html', context)
+
 
 
 
@@ -929,21 +968,29 @@ def make_payment(request):
 
 
 
-def process_payment(request):
-    user = request.user
+def guest_make_payment(request):
+    return render(request, 'pay/guest_customer/guest_make_payment.html')
+
+
+
+
+def guest_process_payment(request):
+    session_key = request.session.session_key
+    if not session_key:
+        request.session.create()  # Ensure session key exists
+        session_key = request.session.session_key
 
     if request.method == 'POST':
         payment_method = request.POST.get('payment_method')
 
         try:
-            cart = Cart.objects.get(customer_id=user)
+            cart = AnonCart.objects.get(session_key=session_key)
             cart_items = cart.items.all()
 
             if not cart_items.exists():
-                # No items to pay for
-                return redirect('cart_history')
+                return redirect('guest_orders')  # No items to pay for
 
-            # Prepare cart snapshot
+            # Build cart snapshot
             cart_snapshot = []
             total = 0
             for item in cart_items:
@@ -956,32 +1003,36 @@ def process_payment(request):
                 })
                 total += item_total
 
-            # Create the transaction
-            transaction = Transaction.objects.create(
-                user=user,
+            # Create anonymous transaction
+            transaction = AnonTransaction.objects.create(
+                session_key=session_key,
                 cart_snapshot=cart_snapshot,
                 total_amount=total,
-                status='success',  # assuming payment is successful here
+                status='success',  # You may want to handle real payment verification here
                 payment_method=payment_method,
-                created_at=timezone.now()
+                created_at=now()
             )
 
-            # After successful payment, delete the cart
-            cart.delete()
+            cart.delete()  # Clear cart after payment
 
-            # Redirect to success page
             return redirect('guest_transaction_success', reference=transaction.reference)
 
-        except Cart.DoesNotExist:
-            # Cart not found
-            return redirect('cart_history')
+        except AnonCart.DoesNotExist:
+            return redirect('guest_orders')
 
-    return redirect('make_payment')  # fallback if GET request
+    return redirect('guest_make_payment')
 
 
 
 
 def guest_transaction_success(request, reference):
+    # Get the transaction based on the reference ID
+    transaction = get_object_or_404(Transaction, reference=reference)
+    
+    return render(request, 'pay/guest_customer/guest_transaction_success.html', {'transaction': transaction})
+
+
+def transaction_success(request, reference):
     # Get the transaction based on the reference ID
     transaction = get_object_or_404(Transaction, reference=reference)
     

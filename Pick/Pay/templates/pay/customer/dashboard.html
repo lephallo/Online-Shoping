@@ -13,7 +13,7 @@
             background-color: #f8f9fa;
         }
         .hero {
-            background: url("{% static 'images/inside.webp' %}") center center/cover no-repeat;
+            background: url("{% static 'images/stor.jpg' %}") center center/cover no-repeat;
             height: 400px;
             color: white;
             display: flex;
@@ -55,7 +55,7 @@
         <div class="row g-4">
             <div class="col-md-3">
                 <div class="card dashboard-card text-center p-4">
-                    <img src="{% static 'images/basket.jpeg' %}" alt="Cart" width="60" class="mx-auto mb-2">
+                    <img src="{% static 'images/cart.jpg' %}" alt="Cart" width="60" class="mx-auto mb-2">
                     <h5>My Cart</h5>
                     <a href="#" class="btn btn-outline-dark mt-3">Go to Cart</a>
                 </div>
@@ -64,7 +64,7 @@
                 <div class="card dashboard-card text-center p-4">
                     <img src="{% static 'images/orders.jpg' %}" alt="Orders" width="60" class="mx-auto mb-2">
                     <h5>My Orders</h5>
-                    <a href="#" class="btn btn-outline-dark mt-3">View Orders</a>
+                    <a href="#" class="btn btn-outline-dark mt-3 w-100">View Orders</a>
                 </div>
             </div>
             <div class="col-md-3">
@@ -85,12 +85,50 @@
         </div>
 
 
-        <!-- Promotions or Banners -->
-        <div class="row my-5">
-            <div class="col-md-12">
-                <img src="{% static 'images/air1.jpeg' %}" class="img-fluid rounded-3 shadow" alt="Promo">
+        <!-- Transaction Insights Section -->
+        <h2 class="section-heading">My Shopping Insights</h2>
+        <div class="row g-4">
+            <div class="col-md-3">
+                <div class="card dashboard-card text-center p-4">
+                    <h6>Total Transactions</h6>
+                    <p class="display-6 fw-bold">{{ transaction_count }}</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card dashboard-card text-center p-4">
+                    <h6>Total Spent</h6>
+                    <p class="display-6 fw-bold">M{{ total_spent|floatformat:2 }}</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card dashboard-card text-center p-4">
+                    <h6>Average Per Purchase</h6>
+                    <p class="display-6 fw-bold">M{{ avg_spent|floatformat:2 }}</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card dashboard-card text-center p-4">
+                    <h6>Preferred Payment</h6>
+                    <p class="display-6 fw-bold">{{ preferred_method }}</p>
+                </div>
             </div>
         </div>
+
+        {% if frequent_items %}
+        <div class="row mt-4">
+            <div class="col-md-12">
+                <div class="card dashboard-card p-4">
+                    <h5>Frequent Purchases</h5>
+                    <ul>
+                        {% for item in frequent_items %}
+                            <li>{{ item }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
 
     </div>
 
